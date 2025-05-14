@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Auth\LoginController as UserLoginController;
+use App\Http\Controllers\Auth\LogoutController as UserLogoutController;
+
 use App\Http\Controllers\User\MeController as UserMeController;
 use App\Http\Controllers\User\IndexController as UserIndexController;
 use App\Http\Controllers\User\ShowController as UserShowController;
@@ -16,8 +19,8 @@ use App\Http\Controllers\Edo\Event\UpdateController as EdoEventUpdateController;
 //})->middleware('auth:sanctum');
 
 Route::group(['prefix' => 'auth'], function () {
-    Route::post('/login', \App\Http\Controllers\Auth\LoginController::class);
-    Route::post('/logout', \App\Http\Controllers\Auth\LogoutController::class)->middleware('auth:sanctum');
+    Route::post('/login', UserLoginController::class);
+    Route::post('/logout', UserLogoutController::class)->middleware('auth:sanctum');
 });
 
 Route::group(['middleware' => 'auth:sanctum'], function () {

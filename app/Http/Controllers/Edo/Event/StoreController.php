@@ -10,6 +10,7 @@ class StoreController extends Controller
 {
     public function __invoke(request $request)
     {
-        return Event::create($request->only(['title', 'description', 'department', 'time']));
+        $event = Event::create($request->only(['title', 'description', 'department', 'time']));
+        return response()->json($event);
     }
 }

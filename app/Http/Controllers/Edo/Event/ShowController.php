@@ -9,6 +9,7 @@ class ShowController extends Controller
 {
     public function __invoke($id)
     {
-        return Event::findOrFail($id);
+        $event = Event::findOrFail($id);
+        return response()->json($event);
     }
 }

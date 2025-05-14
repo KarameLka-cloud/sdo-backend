@@ -9,6 +9,7 @@ class IndexController extends Controller
 {
     public function __invoke()
     {
-        return Event::all();
+        $events = Event::all();
+        return response()->json($events);
     }
 }
