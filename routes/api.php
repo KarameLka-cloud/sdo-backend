@@ -30,8 +30,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 });
 
 Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
-    Route::get('/events', EdoEventIndexController::class);
-    Route::post('/events', EdoEventStoreController::class);
-    Route::get('/events/{id}', EdoEventShowController::class);
-    Route::post('/events/{id}', EdoEventUpdateController::class);
+//    Route::get('/events', EdoEventIndexController::class);
+//    Route::post('/events', EdoEventStoreController::class);
+//    Route::get('/events/{id}', EdoEventShowController::class);
+//    Route::post('/events/{id}', EdoEventUpdateController::class);
 });
+
+Route::apiResource('event', \App\Http\Controllers\Edo\Event\EventController::class);
