@@ -10,6 +10,7 @@ class IndexController extends Controller
 {
     public function __invoke()
     {
-        return User::all();
+        $users = User::all();
+        return response()->json($users);
     }
 }
