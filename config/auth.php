@@ -66,7 +66,7 @@ return [
             'rules' => [],
             'scopes' => [],
             'database' => [
-                'model' => App\Models\User::class,
+                'model' => App\Models\User\User::class,
                 'sync_passwords' => false,
                 'sync_attributes' => [
                     'name' => 'cn',
