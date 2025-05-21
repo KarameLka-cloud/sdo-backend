@@ -2,28 +2,22 @@
 
 namespace App\Http\Controllers\User;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(): JsonResponse
     {
         $users = User::all();
         return response()->json($users);
     }
 
-    public function show($id)
+    public function show($id): JsonResponse
     {
         $user = User::findOrFail($id);
-        return response()->json($user);
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        $user->update($request->only(['role']));
         return response()->json($user);
     }
 }
