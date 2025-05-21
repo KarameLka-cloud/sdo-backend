@@ -1,29 +1,26 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController as UserLoginController;
-use App\Http\Controllers\Auth\LogoutController as UserLogoutController;
 
-use App\Http\Controllers\User\IndexController as UserIndexController;
-use App\Http\Controllers\User\MeController as UserMeController;
-use App\Http\Controllers\User\ShowController as UserShowController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\LogoutController;
+
+use App\Http\Controllers\User\UserController;
 
 use App\Http\Controllers\Edo\EdoEventController;
 use App\Http\Controllers\Education\EducationEventController;
 
-//Route::get('/user', function (Request $request) {
-//    return $request->user();
-//})->middleware('auth:sanctum');
-
 Route::group(['prefix' => 'auth'], function () {
-    Route::post('/login', UserLoginController::class);
-    Route::post('/logout', UserLogoutController::class)->middleware('auth:sanctum');
+    Route::post('/login', LoginController::class);
+    Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
 });
 
-Route::group(['middleware' => 'auth:sanctum'], function () {
-    Route::get('/users/me', UserMeController::class);
-    Route::get('/users', UserIndexController::class);
-    Route::get('/users/{id}', UserShowController::class);
+Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('me', function (Request $request) {
+        return $request->user();
+    });
+    Route::apiResource('/', UserController::class);
 });
 
 Route::group(['prefix' => 'education', 'middleware' => 'auth:sanctum'], function () {
