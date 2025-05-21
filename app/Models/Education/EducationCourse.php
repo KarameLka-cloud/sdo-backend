@@ -4,7 +4,7 @@ namespace App\Models\Education;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EducationEvent extends Model
+class EducationCourse extends Model
 {
     protected $guarded = [];
 }

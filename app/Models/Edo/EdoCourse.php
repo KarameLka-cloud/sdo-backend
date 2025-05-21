@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Models\Education;
+namespace App\Models\Edo;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EducationEvent extends Model
+class EdoCourse extends Model
 {
     protected $guarded = [];
 }
