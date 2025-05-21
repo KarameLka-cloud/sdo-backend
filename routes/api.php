@@ -12,8 +12,8 @@ use App\Http\Controllers\Edo\EdoEventController;
 use App\Http\Controllers\Education\EducationEventController;
 
 Route::group(['prefix' => 'auth'], function () {
-    Route::post('/login', LoginController::class);
-    Route::post('/logout', LogoutController::class)->middleware('auth:sanctum');
+    Route::post('login', LoginController::class);
+    Route::post('logout', LogoutController::class)->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
