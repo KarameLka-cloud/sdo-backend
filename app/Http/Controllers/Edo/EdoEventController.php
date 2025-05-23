@@ -11,7 +11,7 @@ class EdoEventController extends Controller
 {
     public function index(): JsonResponse
     {
-        $events = EdoEvent::all();
+        $events = EdoEvent::orderBy('date', 'desc')->orderBy('time')->get();
         return response()->json($events);
     }
 
