@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Edo\EdoCourseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -8,6 +9,7 @@ use App\Http\Controllers\Auth\LogoutController;
 
 use App\Http\Controllers\User\UserController;
 
+use App\Http\Controllers\Edo\EdoTestController;
 use App\Http\Controllers\Edo\EdoEventController;
 use App\Http\Controllers\Education\EducationEventController;
 
@@ -28,5 +30,7 @@ Route::group(['prefix' => 'education', 'middleware' => 'auth:sanctum'], function
 });
 
 Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
+    Route::apiResource('courses', EdoCourseController::class);
     Route::apiResource('events', EdoEventController::class);
+    Route::apiResource('tests', EdoTestController::class);
 });
