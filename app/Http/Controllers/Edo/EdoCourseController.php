@@ -17,7 +17,7 @@ class EdoCourseController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $course = EdoCourse::create($request->only(['title', 'date_end']));
+        $course = EdoCourse::create($request->only(['title', 'url', 'date_end']));
         return response()->json($course);
     }
 
@@ -30,7 +30,7 @@ class EdoCourseController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $course = EdoCourse::findOrFail($id);
-        $course->update($request->only(['title', 'date_end']));
+        $course->update($request->only(['title', 'url', 'date_end']));
         return response()->json($course);
     }
 

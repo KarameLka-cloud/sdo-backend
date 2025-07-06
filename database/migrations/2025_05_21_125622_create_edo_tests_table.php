@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('edo_tests', function (Blueprint $table) {
             $table->id();
             $table->string('title');
+            $table->string('url');
             $table->string('date_end');
             $table->timestamps();
         });
