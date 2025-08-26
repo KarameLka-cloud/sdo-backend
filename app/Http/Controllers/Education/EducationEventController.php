@@ -11,7 +11,7 @@ class EducationEventController extends Controller
 {
     public function index(): JsonResponse
     {
-        $events = EducationEvent::all();
+        $events = EducationEvent::orderBy('date', 'desc')->orderBy('time')->get();
         return response()->json($events);
     }
 

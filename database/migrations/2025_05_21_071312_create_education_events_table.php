@@ -15,8 +15,8 @@ return new class extends Migration {
             $table->string('title');
             $table->string('description');
             $table->string('department');
-            $table->string('time');
-            $table->string('date');
+            $table->time('time');
+            $table->date('date');
             $table->timestamps();
         });
     }

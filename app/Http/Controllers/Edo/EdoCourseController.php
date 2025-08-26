@@ -11,7 +11,7 @@ class EdoCourseController extends Controller
 {
     public function index(): JsonResponse
     {
-        $courses = EdoCourse::orderBy('date_end')->get();
+        $courses = EdoCourse::orderBy('date_end', 'desc')->get();
         return response()->json($courses);
     }
 

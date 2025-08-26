@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('url');
-            $table->string('date_end');
+            $table->date('date_end');
             $table->timestamps();
         });
     }

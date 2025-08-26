@@ -11,7 +11,7 @@ class EdoTestController extends Controller
 {
     public function index(): JsonResponse
     {
-        $tests = EdoTest::orderBy('date_end')->get();
+        $tests = EdoTest::orderBy('date_end', 'desc')->get();
         return response()->json($tests);
     }
 
