@@ -25,19 +25,26 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
     Route::get('me', function (Request $request) {
         return $request->user();
     });
-    Route::apiResource('/', UserController::class);
+    Route::apiResource('/', UserController::class)->middleware('admin');
 });
 
 Route::group(['prefix' => 'education', 'middleware' => 'auth:sanctum'], function () {
-    Route::apiResource('events', EducationEventController::class);
-    Route::apiResource('courses', EducationCourseController::class);
-    Route::apiResource('webinars', EducationWebinarController::class);
-    Route::apiResource('tests', EducationTestController::class);
+    Route::apiResource('events', EducationEventController::class)->only(['index', 'show']);
+    Route::apiResource('events', EducationEventController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
+    Route::apiResource('courses', EducationCourseController::class)->only(['index', 'show']);;
+    Route::apiResource('courses', EducationCourseController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
+    Route::apiResource('webinars', EducationWebinarController::class)->only(['index', 'show']);;
+    Route::apiResource('webinars', EducationWebinarController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
+    Route::apiResource('tests', EducationTestController::class)->only(['index', 'show']);;
+    Route::apiResource('tests', EducationTestController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
 
 });
 
 Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
-    Route::apiResource('events', EdoEventController::class);
-    Route::apiResource('courses', EdoCourseController::class);
-    Route::apiResource('tests', EdoTestController::class);
+    Route::apiResource('events', EdoEventController::class)->only(['index', 'show']);
+    Route::apiResource('events', EdoEventController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
+    Route::apiResource('courses', EdoCourseController::class)->only(['index', 'show']);
+    Route::apiResource('courses', EdoCourseController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
+    Route::apiResource('tests', EdoTestController::class)->only(['index', 'show']);
+    Route::apiResource('tests', EdoTestController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
 });
