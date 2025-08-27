@@ -35,9 +35,16 @@ class User extends Authenticatable implements LdapAuthenticatable
      * @var list<string>
      */
     protected $hidden = [
+        'created_at',
+        'updated_at',
+        'guid',
+        'domain',
         'password',
         'remember_token',
+        'roles',
     ];
+
+    protected $appends = ['role'];
 
     /**
      * Get the attributes that should be cast.
@@ -50,5 +57,20 @@ class User extends Authenticatable implements LdapAuthenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+//    public function hasRole(string $role)
+//    {
+//        return $this->roles()->where('name', $role)->exists();
+//    }
+
+    public function getRoleAttribute()
+    {
+        return $this->roles()->pluck('name')->first();
     }
 }
