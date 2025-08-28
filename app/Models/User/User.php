@@ -44,7 +44,7 @@ class User extends Authenticatable implements LdapAuthenticatable
         'roles',
     ];
 
-    protected $appends = ['role'];
+    protected $appends = ['role', 'role_name'];
 
     /**
      * Get the attributes that should be cast.
@@ -72,5 +72,10 @@ class User extends Authenticatable implements LdapAuthenticatable
     public function getRoleAttribute()
     {
         return $this->roles()->pluck('name')->first();
+    }
+
+    public function getRoleNameAttribute()
+    {
+        return $this->roles()->pluck('display_name')->first();
     }
 }
