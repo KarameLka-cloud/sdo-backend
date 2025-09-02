@@ -11,7 +11,7 @@ class EducationWebinarController extends Controller
 {
     public function index(): JsonResponse
     {
-        $webinars = EducationWebinar::orderBy('date', 'desc')->get();
+        $webinars = EducationWebinar::orderBy('date', 'desc')->orderBy('time_start')->get();
         return response()->json($webinars);
     }
 
