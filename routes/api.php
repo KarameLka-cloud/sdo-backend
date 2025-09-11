@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 
 use App\Http\Controllers\User\UserController;
+use App\Http\Controllers\User\RoleController;
 
 use App\Http\Controllers\Edo\EdoEventController;
 use App\Http\Controllers\Edo\EdoCourseController;
@@ -26,6 +27,8 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
         return $request->user();
     });
     Route::apiResource('/', UserController::class)->middleware('admin');
+    Route::post('assign_role', [RoleController::class, 'assignAdminRole'])->middleware('admin');
+    Route::post('revoke-role', [RoleController::class, 'revokeAdminRole'])->middleware('admin');
 });
 
 Route::group(['prefix' => 'education', 'middleware' => 'auth:sanctum'], function () {
