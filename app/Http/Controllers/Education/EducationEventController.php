@@ -17,7 +17,7 @@ class EducationEventController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $event = EducationEvent::create($request->only(['title', 'description', 'department', 'time', 'date']));
+        $event = EducationEvent::create($request->all());
         return response()->json($event);
     }
 
@@ -30,7 +30,7 @@ class EducationEventController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $event = EducationEvent::findOrFail($id);
-        $event->update($request->only(['title', 'description', 'department', 'time', 'date']));
+        $event->update($request->all());
         return response()->json($event);
     }
 

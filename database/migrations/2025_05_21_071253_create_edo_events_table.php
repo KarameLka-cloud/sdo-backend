@@ -14,7 +14,9 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('description');
-            $table->string('department');
+            $table->foreignId('department_id')->constrained('departments');
+//            $table->unsignedBigInteger('department_id');
+//            $table->foreign('department_id')->references('id')->on('departments');
             $table->time('time');
             $table->date('date');
             $table->timestamps();

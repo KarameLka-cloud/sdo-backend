@@ -17,7 +17,7 @@ class EducationWebinarController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $webinar = EducationWebinar::create($request->only(['title', 'time_start', 'time_end', 'date']));
+        $webinar = EducationWebinar::create($request->all());
         return response()->json($webinar);
     }
 
@@ -30,7 +30,7 @@ class EducationWebinarController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $webinar = EducationWebinar::findOrFail($id);
-        $webinar->update($request->only(['title', 'time_start', 'time_end', 'date']));
+        $webinar->update($request->all());
         return response()->json($webinar);
     }
 

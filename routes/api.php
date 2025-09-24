@@ -27,7 +27,7 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
         return $request->user();
     });
     Route::apiResource('/', UserController::class)->middleware('admin');
-    Route::post('assign_role', [RoleController::class, 'assignAdminRole'])->middleware('admin');
+    Route::post('assign-role', [RoleController::class, 'assignAdminRole'])->middleware('admin');
     Route::post('revoke-role', [RoleController::class, 'revokeAdminRole'])->middleware('admin');
 });
 

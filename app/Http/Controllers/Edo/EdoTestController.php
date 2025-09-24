@@ -17,7 +17,7 @@ class EdoTestController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $test = EdoTest::create($request->only(['title', 'url', 'date_end']));
+        $test = EdoTest::create($request->all());
         return response()->json($test);
     }
 
@@ -30,7 +30,7 @@ class EdoTestController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $test = EdoTest::findOrFail($id);
-        $test->update($request->only(['title', 'url', 'date_end']));
+        $test->update($request->all());
         return response()->json($test);
     }
 

@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class EducationEvent extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'title',
+        'description',
+        'department',
+        'time',
+        'date',
+    ];
 
     protected $hidden = [
         'created_at',

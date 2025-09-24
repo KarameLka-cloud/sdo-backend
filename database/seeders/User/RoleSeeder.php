@@ -1,11 +1,9 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\User;
 
 use App\Models\User\Role;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class RoleSeeder extends Seeder
 {
@@ -23,8 +21,6 @@ class RoleSeeder extends Seeder
         Role::create([
             'name' => 'ADMIN',
             'display_name' => 'Администратор',
-            'created_at' => now(),
-            'updated_at' => now()
         ]);
     }
 }
