@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Edo;
 
+use App\Http\Requests\EventRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Edo\EdoEvent;
-use Illuminate\Http\Request;
 
 class EdoEventController extends Controller
 {
@@ -15,9 +15,9 @@ class EdoEventController extends Controller
         return response()->json($events);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(EventRequest $request): JsonResponse
     {
-        $event = EdoEvent::create($request->all());
+        $event = EdoEvent::create($request->validated());
         return response()->json($event);
     }
 
@@ -27,10 +27,10 @@ class EdoEventController extends Controller
         return response()->json($event);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(EventRequest $request, $id): JsonResponse
     {
         $event = EdoEvent::findOrFail($id);
-        $event->update($request->all());
+        $event->update($request->validated());
         return response()->json($event);
     }
 

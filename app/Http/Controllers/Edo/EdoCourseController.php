@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Edo;
 
+use App\Http\Requests\CourseRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Edo\EdoCourse;
-use Illuminate\Http\Request;
 
 class EdoCourseController extends Controller
 {
@@ -15,9 +15,9 @@ class EdoCourseController extends Controller
         return response()->json($courses);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CourseRequest $request): JsonResponse
     {
-        $course = EdoCourse::create($request->all());
+        $course = EdoCourse::create($request->validated());
         return response()->json($course);
     }
 
@@ -27,10 +27,10 @@ class EdoCourseController extends Controller
         return response()->json($course);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(CourseRequest $request, $id): JsonResponse
     {
         $course = EdoCourse::findOrFail($id);
-        $course->update($request->all());
+        $course->update($request->validated());
         return response()->json($course);
     }
 

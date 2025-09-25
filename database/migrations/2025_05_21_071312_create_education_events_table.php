@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('description');
-            $table->string('department');
+            $table->foreignId('department_id')->constrained('departments');
             $table->time('time');
             $table->date('date');
             $table->timestamps();

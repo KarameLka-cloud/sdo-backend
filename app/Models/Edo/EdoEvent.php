@@ -10,7 +10,7 @@ class EdoEvent extends Model
     protected $fillable = [
         'title',
         'description',
-        'department',
+        'department_id',
         'time',
         'date',
     ];
@@ -32,6 +32,5 @@ class EdoEvent extends Model
     public function getDepartmentAttribute()
     {
         return $this->department()->pluck('name')->first();
-//        return $this->department()->first()->name;
     }
 }

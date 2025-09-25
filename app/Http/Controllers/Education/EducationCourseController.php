@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Education;
 
+use App\Http\Requests\CourseRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Education\EducationCourse;
-use Illuminate\Http\Request;
 
 class EducationCourseController extends Controller
 {
@@ -15,9 +15,9 @@ class EducationCourseController extends Controller
         return response()->json($courses);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CourseRequest $request): JsonResponse
     {
-        $course = EducationCourse::create($request->only(['title', 'url', 'date_end']));
+        $course = EducationCourse::create($request->validated());
         return response()->json($course);
     }
 
@@ -27,10 +27,10 @@ class EducationCourseController extends Controller
         return response()->json($course);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(CourseRequest $request, $id): JsonResponse
     {
         $course = EducationCourse::findOrFail($id);
-        $course->update($request->only(['title', 'url', 'date_end']));
+        $course->update($request->validated());
         return response()->json($course);
     }
 

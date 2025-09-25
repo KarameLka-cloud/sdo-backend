@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Edo;
 
+use App\Http\Requests\TestRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Edo\EdoTest;
-use Illuminate\Http\Request;
 
 class EdoTestController extends Controller
 {
@@ -15,9 +15,9 @@ class EdoTestController extends Controller
         return response()->json($tests);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(TestRequest $request): JsonResponse
     {
-        $test = EdoTest::create($request->all());
+        $test = EdoTest::create($request->validated());
         return response()->json($test);
     }
 
@@ -27,10 +27,10 @@ class EdoTestController extends Controller
         return response()->json($test);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(TestRequest $request, $id): JsonResponse
     {
         $test = EdoTest::findOrFail($id);
-        $test->update($request->all());
+        $test->update($request->validated());
         return response()->json($test);
     }
 

@@ -1,6 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\User\DepartmentController;
+use App\Http\Controllers\User\PositionController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\LoginController;
@@ -23,24 +25,25 @@ Route::group(['prefix' => 'auth'], function () {
 });
 
 Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
-    Route::get('me', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('me', fn() => response()->json(Auth::user()));
     Route::apiResource('/', UserController::class)->middleware('admin');
     Route::post('assign-role', [RoleController::class, 'assignAdminRole'])->middleware('admin');
     Route::post('revoke-role', [RoleController::class, 'revokeAdminRole'])->middleware('admin');
+    Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
+    Route::apiResource('departments', DepartmentController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
+    Route::apiResource('positions', PositionController::class)->only(['index', 'show']);
+    Route::apiResource('positions', PositionController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
 });
 
 Route::group(['prefix' => 'education', 'middleware' => 'auth:sanctum'], function () {
     Route::apiResource('events', EducationEventController::class)->only(['index', 'show']);
     Route::apiResource('events', EducationEventController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
-    Route::apiResource('courses', EducationCourseController::class)->only(['index', 'show']);;
+    Route::apiResource('courses', EducationCourseController::class)->only(['index', 'show']);
     Route::apiResource('courses', EducationCourseController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
-    Route::apiResource('webinars', EducationWebinarController::class)->only(['index', 'show']);;
+    Route::apiResource('webinars', EducationWebinarController::class)->only(['index', 'show']);
     Route::apiResource('webinars', EducationWebinarController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
-    Route::apiResource('tests', EducationTestController::class)->only(['index', 'show']);;
+    Route::apiResource('tests', EducationTestController::class)->only(['index', 'show']);
     Route::apiResource('tests', EducationTestController::class)->only(['store', 'update', 'destroy'])->middleware('admin');
-
 });
 
 Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {

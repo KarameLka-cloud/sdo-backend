@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Education;
 
+use App\Http\Requests\WebinarRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Education\EducationWebinar;
-use Illuminate\Http\Request;
 
 class EducationWebinarController extends Controller
 {
@@ -15,9 +15,9 @@ class EducationWebinarController extends Controller
         return response()->json($webinars);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(WebinarRequest $request): JsonResponse
     {
-        $webinar = EducationWebinar::create($request->all());
+        $webinar = EducationWebinar::create($request->validated());
         return response()->json($webinar);
     }
 
@@ -27,10 +27,10 @@ class EducationWebinarController extends Controller
         return response()->json($webinar);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(WebinarRequest $request, $id): JsonResponse
     {
         $webinar = EducationWebinar::findOrFail($id);
-        $webinar->update($request->all());
+        $webinar->update($request->validated());
         return response()->json($webinar);
     }
 

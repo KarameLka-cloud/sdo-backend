@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Education;
 
+use App\Http\Requests\EventRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Education\EducationEvent;
@@ -15,9 +16,9 @@ class EducationEventController extends Controller
         return response()->json($events);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(EventRequest $request): JsonResponse
     {
-        $event = EducationEvent::create($request->all());
+        $event = EducationEvent::create($request->validated());
         return response()->json($event);
     }
 
@@ -27,10 +28,10 @@ class EducationEventController extends Controller
         return response()->json($event);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(EventRequest $request, $id): JsonResponse
     {
         $event = EducationEvent::findOrFail($id);
-        $event->update($request->all());
+        $event->update($request->validated());
         return response()->json($event);
     }
 
