@@ -3,6 +3,7 @@
 namespace App\Models\User;
 
 use App\Models\Edo\EdoEvent;
+use App\Models\Edo\EdoCourse;
 use App\Models\Education\EducationEvent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,11 @@ class Department extends Model
     public function edoEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(EdoEvent::class);
+    }
+
+    public function edoCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EdoCourse::class);
     }
 
     public function educationEvents(): \Illuminate\Database\Eloquent\Relations\HasMany

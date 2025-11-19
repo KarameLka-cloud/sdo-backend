@@ -26,8 +26,10 @@ class EventRequest extends FormRequest
         return [
             'title' => ['required', 'string'],
             'description' => ['required', 'string'],
+            'link' => ['nullable', 'string'],
             'department_id' => ['required', 'numeric'],
-            'time' => ['required', 'date_format:H:i'],
+            'note_department' => ['nullable', 'string'],
+            'time' => ['nullable', 'date_format:H:i'],
             'date' => ['required', 'date'],
         ];
     }
@@ -39,9 +41,10 @@ class EventRequest extends FormRequest
             'title.string' => 'Title must be a string.',
             'description.required' => 'Description is required.',
             'description.string' => 'Description must be a string.',
+            'link.string' => 'Link must be a string.',
             'department_id.required' => 'Department is required.',
             'department_id.numeric' => 'Department must be a number.',
-            'time.required' => 'Time is required.',
+            'note_department.string' => 'Note department must be a string.',
             'time.date' => 'Time must be a time.',
             'date.required' => 'Date is required.',
             'date.date' => 'Date must be a date.',

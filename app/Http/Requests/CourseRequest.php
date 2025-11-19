@@ -26,6 +26,8 @@ class CourseRequest extends FormRequest
         return [
             'title' => ['required', 'string'],
             'url' => ['required', 'string'],
+            'department_id' => ['required', 'numeric'],
+            'note_department' => ['nullable', 'string'],
             'date_end' => ['required', 'date'],
         ];
     }
@@ -37,6 +39,9 @@ class CourseRequest extends FormRequest
             'title.string' => 'Title must be a string.',
             'url.required' => 'Url is required.',
             'url.string' => 'Url must be a string.',
+            'department_id.required' => 'Department is required.',
+            'department_id.numeric' => 'Department must be a number.',
+            'note_department.string' => 'Note department must be a string.',
             'date_end.required' => 'Date is required.',
             'date_end.date' => 'Date must be a date.',
         ];

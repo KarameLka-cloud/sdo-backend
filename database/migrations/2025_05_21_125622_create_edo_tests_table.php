@@ -14,6 +14,8 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('url');
+            $table->foreignId('position_id')->constrained('positions');
+            $table->string('note_position')->nullable();
             $table->date('date_end');
             $table->timestamps();
         });

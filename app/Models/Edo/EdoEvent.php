@@ -10,7 +10,9 @@ class EdoEvent extends Model
     protected $fillable = [
         'title',
         'description',
+        'link',
         'department_id',
+        'note_department',
         'time',
         'date',
     ];
