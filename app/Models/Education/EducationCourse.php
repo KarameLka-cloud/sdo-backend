@@ -2,6 +2,7 @@
 
 namespace App\Models\Education;
 
+use App\Models\User\Department;
 use Illuminate\Database\Eloquent\Model;
 
 class EducationCourse extends Model
@@ -9,6 +10,8 @@ class EducationCourse extends Model
     protected $fillable = [
         'title',
         'url',
+        'department_id',
+        'note_department',
         'date_end',
     ];
 
@@ -16,4 +19,18 @@ class EducationCourse extends Model
         'created_at',
         'updated_at',
     ];
+
+    protected $appends = [
+        'department',
+    ];
+
+    public function department(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function getDepartmentAttribute()
+    {
+        return $this->department()->pluck('name')->first();
+    }
 }

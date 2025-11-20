@@ -10,7 +10,9 @@ class EducationEvent extends Model
     protected $fillable = [
         'title',
         'description',
+        'link',
         'department_id',
+        'note_department',
         'time',
         'date',
     ];
@@ -21,7 +23,7 @@ class EducationEvent extends Model
     ];
 
     protected $appends = [
-        'department'
+        'department',
     ];
 
     public function department(): \Illuminate\Database\Eloquent\Relations\BelongsTo

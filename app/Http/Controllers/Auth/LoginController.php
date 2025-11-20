@@ -20,7 +20,7 @@ class LoginController extends Controller
             'samaccountname' => $credentials['login'],
             'password' => $credentials['password']
         ])) {
-            return response()->json(['message' => 'Пользователь не найден'], 401);
+            return response()->json(['message' => 'Пользователь не найден ❌'], 401);
         }
 
         $token = $request->user()->createToken('auth_token')->plainTextToken;

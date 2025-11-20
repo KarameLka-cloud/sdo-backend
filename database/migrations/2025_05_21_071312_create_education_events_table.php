@@ -14,8 +14,10 @@ return new class extends Migration {
             $table->id();
             $table->string('title');
             $table->string('description');
+            $table->string('link')->nullable();
             $table->foreignId('department_id')->constrained('departments');
-            $table->time('time');
+            $table->string('note_department')->nullable();
+            $table->time('time')->nullable();
             $table->date('date');
             $table->timestamps();
         });
