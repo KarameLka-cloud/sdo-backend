@@ -14,8 +14,8 @@ class Position extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
-    public function edoTests(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(EdoTest::class);
-    }
+//    public function edoTests(): \Illuminate\Database\Eloquent\Relations\HasMany
+//    {
+//        return $this->hasMany(EdoTest::class);
+//    }
 }

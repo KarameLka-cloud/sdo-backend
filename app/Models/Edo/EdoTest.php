@@ -24,13 +24,13 @@ class EdoTest extends Model
         'position',
     ];
 
-    public function positions(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function position(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Position::class);
     }
 
     public function getPositionAttribute()
     {
-        return $this->positions()->pluck('name')->first();
+        return $this->position()->pluck('name')->first();
     }
 }
