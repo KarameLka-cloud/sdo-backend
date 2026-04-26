@@ -44,6 +44,5 @@ class PositionSeeder extends Seeder
                 'name' => $positionName,
             ]);
         }
-//        Position::factory()->count(10)->create();
     }
 }

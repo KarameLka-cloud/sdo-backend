@@ -12,15 +12,19 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-//        DB::table('roles')->insert([
-//            'name' => 'admin',
-//            'display_name' => 'Администратор',
-//            'created_at' => now(),
-//            'updated_at' => now(),
-//        ]);
         Role::create([
-            'name' => 'ADMIN',
-            'display_name' => 'Администратор',
+            [
+                'name' => 'ADMIN',
+                'display_name' => 'Администратор',
+            ],
+            [
+                'name' => 'MENTOR',
+                'display_name' => 'Наставник',
+            ],
+            [
+                'name' => 'ADMIN',
+                'DEPARTMENT_HEAD' => 'Руководитель отдела',
+            ],
         ]);
     }
 }
