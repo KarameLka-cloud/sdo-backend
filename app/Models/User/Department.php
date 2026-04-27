@@ -16,18 +16,18 @@ class Department extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
-//    public function edoEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
-//    {
-//        return $this->hasMany(EdoEvent::class);
-//    }
-//
-//    public function edoCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
-//    {
-//        return $this->hasMany(EdoCourse::class);
-//    }
-//
-//    public function educationEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
-//    {
-//        return $this->hasMany(EducationEvent::class);
-//    }
+    //    public function edoEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    //    {
+    //        return $this->hasMany(EdoEvent::class);
+    //    }
+    //
+    //    public function edoCourses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    //    {
+    //        return $this->hasMany(EdoCourse::class);
+    //    }
+    //
+    //    public function educationEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    //    {
+    //        return $this->hasMany(EducationEvent::class);
+    //    }
 }

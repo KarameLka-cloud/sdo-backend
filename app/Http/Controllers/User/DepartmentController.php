@@ -17,13 +17,16 @@ class DepartmentController extends Controller
 
     public function store(Request $request): \Illuminate\Http\JsonResponse
     {
-        $department = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'unique'],
-        ],
+        $department = Validator::make(
+            $request->all(),
+            [
+                'name' => ['required', 'string', 'unique'],
+            ],
             [
                 'name.required' => 'Department name is required.',
                 'name.unique' => 'Name is already taken.',
-            ]);
+            ]
+        );
 
         if ($department->fails()) {
             return response()->json($department->errors(), 400);

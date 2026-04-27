@@ -24,7 +24,7 @@ class RolePermission
 
         // Получаем роль пользователя
         $roleName = $user->role;
-        
+
         if (!$roleName) {
             return response()->json(['message' => 'Role not assigned'], 403);
         }
@@ -37,7 +37,7 @@ class RolePermission
 
         // Проверяем, есть ли у пользователя необходимое право
         $requiredPermission = Permission::from($permission);
-        
+
         if (!Permission::hasPermission($userRole, $requiredPermission)) {
             return response()->json([
                 'message' => 'Forbidden. You do not have required permission.',

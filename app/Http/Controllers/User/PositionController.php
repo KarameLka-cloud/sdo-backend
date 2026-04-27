@@ -17,13 +17,16 @@ class PositionController extends Controller
 
     public function store(Request $request): \Illuminate\Http\JsonResponse
     {
-        $position = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'unique'],
-        ],
+        $position = Validator::make(
+            $request->all(),
+            [
+                'name' => ['required', 'string', 'unique'],
+            ],
             [
                 'name.required' => 'Position name is required.',
                 'name.unique' => 'Name is already taken.',
-            ]);
+            ]
+        );
 
         if ($position->fails()) {
             return response()->json($position->errors(), 400);
