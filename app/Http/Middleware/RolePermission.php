@@ -36,7 +36,14 @@ class RolePermission
         }
 
         // Проверяем, есть ли у пользователя необходимое право
-        $requiredPermission = Permission::from($permission);
+        try {
+            $requiredPermission = Permission::from($permission);
+        } catch (\ValueError $e) {
+            return response()->json([
+                'message' => 'Invalid permission in route middleware',
+                'required' => $permission,
+            ], 500);
+        }
 
         if (!Permission::hasPermission($userRole, $requiredPermission)) {
             return response()->json([
