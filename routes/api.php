@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\User\DepartmentController;
 use App\Http\Controllers\User\PositionController;
+use App\Http\Controllers\Mentorship\AdaptationPlanController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -54,4 +55,8 @@ Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
     Route::apiResource('courses', EdoCourseController::class)->only(['store', 'update', 'destroy'])->middleware('role:full_access');
     Route::apiResource('tests', EdoTestController::class)->only(['index', 'show']);
     Route::apiResource('tests', EdoTestController::class)->only(['store', 'update', 'destroy'])->middleware('role:full_access');
+});
+
+Route::group(['prefix' => 'mentorship', 'middleware' => 'auth:sanctum'], function () {
+    Route::apiResource('adaptation-plans', AdaptationPlanController::class)->only(['index', 'show', 'store']);
 });

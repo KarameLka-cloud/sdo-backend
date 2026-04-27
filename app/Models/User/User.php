@@ -2,6 +2,7 @@
 
 namespace App\Models\User;
 
+use App\Models\Mentorship\AdaptationPlan;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -62,6 +63,11 @@ class User extends Authenticatable implements LdapAuthenticatable
     public function roles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Role::class);
+    }
+
+    public function adaptationPlans(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AdaptationPlan::class);
     }
 
     //    public function hasRole(string $role)

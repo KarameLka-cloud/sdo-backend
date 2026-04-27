@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class AdaptationPlanRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'user_id' => ['required', 'exists:users,id', 'unique:adaptation_plans,user_id'],
+            'start_date' => ['required', 'date'],
+            'work_schedule' => ['required', 'string'],
+            'shift' => ['required', 'integer', 'min:1'],
+            'mentor' => ['required', 'string'],
+            'department_head' => ['required', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'user_id.unique' => 'План адаптации для этого пользователя уже создан.',
+        ];
+    }
+}
