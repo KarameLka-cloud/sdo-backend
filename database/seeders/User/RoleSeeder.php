@@ -12,7 +12,7 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create([
+        $roles = [
             [
                 'name' => 'ADMIN',
                 'display_name' => 'Администратор',
@@ -22,9 +22,13 @@ class RoleSeeder extends Seeder
                 'display_name' => 'Наставник',
             ],
             [
-                'name' => 'ADMIN',
-                'DEPARTMENT_HEAD' => 'Руководитель отдела',
+                'name' => 'DEPARTMENT_HEAD',
+                'display_name' => 'Руководитель отдела',
             ],
-        ]);
+        ];
+
+        foreach ($roles as $role) {
+            Role::create($role);
+        }
     }
 }
