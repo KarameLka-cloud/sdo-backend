@@ -30,4 +30,14 @@ class AdaptationPlan extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function mentorUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'mentor');
+    }
+
+    public function departmentHeadUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'department_head');
+    }
 }

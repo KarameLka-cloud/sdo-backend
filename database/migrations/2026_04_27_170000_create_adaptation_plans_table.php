@@ -16,8 +16,8 @@ return new class extends Migration {
             $table->date('start_date');
             $table->string('work_schedule');
             $table->unsignedTinyInteger('shift');
-            $table->string('mentor');
-            $table->string('department_head');
+            $table->foreignId('mentor')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('department_head')->constrained('users')->cascadeOnDelete();
             $table->timestamps();
         });
     }

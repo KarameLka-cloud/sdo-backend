@@ -27,7 +27,10 @@ Route::group(['prefix' => 'auth'], function () {
 
 Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
     Route::get('me', fn() => response()->json(Auth::user()));
-    Route::apiResource('/', UserController::class)->middleware('role:full_access');
+    Route::get('/', [UserController::class, 'index']);
+    Route::apiResource('/', UserController::class)->except(['index'])->middleware('role:full_access');
+    Route::get('mentors', [UserController::class, 'mentors']);
+    Route::get('department-heads', [UserController::class, 'departmentHeads']);
     Route::get('roles', [RoleController::class, 'index']);
     Route::post('assign-role', [RoleController::class, 'assignRole'])->middleware('role:full_access');
     Route::post('revoke-role', [RoleController::class, 'revokeRole'])->middleware('role:full_access');
@@ -58,5 +61,5 @@ Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
 });
 
 Route::group(['prefix' => 'mentorship', 'middleware' => 'auth:sanctum'], function () {
-    Route::apiResource('adaptation-plans', AdaptationPlanController::class)->only(['index', 'show', 'store']);
+    Route::apiResource('adaptation-plans', AdaptationPlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
 });

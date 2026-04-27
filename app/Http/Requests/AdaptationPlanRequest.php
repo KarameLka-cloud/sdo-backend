@@ -26,8 +26,8 @@ class AdaptationPlanRequest extends FormRequest
             'start_date' => ['required', 'date'],
             'work_schedule' => ['required', 'string'],
             'shift' => ['required', 'integer', 'min:1'],
-            'mentor' => ['required', 'string'],
-            'department_head' => ['required', 'string'],
+            'mentor' => ['required', 'integer', 'exists:users,id'],
+            'department_head' => ['required', 'integer', 'exists:users,id'],
         ];
     }
 
