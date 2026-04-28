@@ -11,6 +11,44 @@ use Illuminate\Support\Facades\Auth;
 
 class AdaptationPlanController extends Controller
 {
+    public function all(): JsonResponse
+    {
+        $plans = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser'])
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json($plans);
+    }
+
+    public function my(): JsonResponse
+    {
+        $authUser = Auth::user();
+        $role = $authUser?->role;
+
+        $query = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser'])
+            ->orderByDesc('id');
+
+        if ($role === UserRole::ADMIN->value) {
+            return response()->json($query->first());
+        }
+
+        if ($role === UserRole::MENTOR->value) {
+            return response()->json(
+                $query->where('mentor', $authUser?->id)->first()
+            );
+        }
+
+        if ($role === UserRole::DEPARTMENT_HEAD->value) {
+            return response()->json(
+                $query->where('department_head', $authUser?->id)->first()
+            );
+        }
+
+        $plan = $query->where('user_id', $authUser?->id)->first();
+
+        return response()->json($plan);
+    }
+
     public function index(): JsonResponse
     {
         $authUser = Auth::user();

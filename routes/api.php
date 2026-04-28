@@ -61,5 +61,7 @@ Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
 });
 
 Route::group(['prefix' => 'mentorship', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('adaptation-plans/my', [AdaptationPlanController::class, 'my']);
+    Route::get('adaptation-plans/all', [AdaptationPlanController::class, 'all']);
     Route::apiResource('adaptation-plans', AdaptationPlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
 });
