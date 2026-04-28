@@ -3,6 +3,7 @@
 use App\Http\Controllers\User\DepartmentController;
 use App\Http\Controllers\User\PositionController;
 use App\Http\Controllers\Mentorship\AdaptationPlanController;
+use App\Http\Controllers\Mentorship\AdaptationPlanTemplateController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -61,7 +62,13 @@ Route::group(['prefix' => 'edo', 'middleware' => 'auth:sanctum'], function () {
 });
 
 Route::group(['prefix' => 'mentorship', 'middleware' => 'auth:sanctum'], function () {
+    Route::apiResource('adaptation-plan-templates', AdaptationPlanTemplateController::class)->only(['index', 'show']);
+    Route::apiResource('adaptation-plan-templates', AdaptationPlanTemplateController::class)->only(['store', 'update', 'destroy'])->middleware('role:full_access');
     Route::get('adaptation-plans/my', [AdaptationPlanController::class, 'my']);
+    Route::patch('adaptation-plans/my/days/{dayId}/intern-comment', [AdaptationPlanController::class, 'updateMyInternComment']);
+    Route::patch('adaptation-plans/my/days/{dayId}/tasks/{taskId}/status', [AdaptationPlanController::class, 'updateMyTaskStatus']);
+    Route::patch('adaptation-plans/{id}/days/{dayId}', [AdaptationPlanController::class, 'updateDay']);
+    Route::patch('adaptation-plans/{id}/days/{dayId}/tasks/{taskId}/status', [AdaptationPlanController::class, 'updateTaskStatus']);
     Route::get('adaptation-plans/all', [AdaptationPlanController::class, 'all']);
     Route::apiResource('adaptation-plans', AdaptationPlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
 });

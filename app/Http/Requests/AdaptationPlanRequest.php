@@ -24,7 +24,7 @@ class AdaptationPlanRequest extends FormRequest
         return [
             'user_id' => ['required', 'exists:users,id', 'unique:adaptation_plans,user_id'],
             'start_date' => ['required', 'date'],
-            'work_schedule' => ['required', 'string'],
+            'adaptation_plan_template_id' => ['required', 'exists:adaptation_plan_templates,id'],
             'shift' => ['required', 'integer', 'min:1'],
             'mentor' => ['required', 'integer', 'exists:users,id'],
             'department_head' => ['required', 'integer', 'exists:users,id'],

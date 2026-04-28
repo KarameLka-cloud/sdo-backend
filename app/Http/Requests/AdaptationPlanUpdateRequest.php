@@ -22,6 +22,9 @@ class AdaptationPlanUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'start_date' => ['sometimes', 'date'],
+            'adaptation_plan_template_id' => ['sometimes', 'integer', 'exists:adaptation_plan_templates,id'],
+            'shift' => ['sometimes', 'integer', 'min:1'],
             'mentor' => ['required', 'integer', 'exists:users,id'],
             'department_head' => ['required', 'integer', 'exists:users,id'],
         ];
