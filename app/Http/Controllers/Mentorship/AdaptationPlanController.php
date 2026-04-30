@@ -245,6 +245,10 @@ class AdaptationPlanController extends Controller
         $validated = $request->validate([
             'date' => ['required', 'date'],
             'completion' => ['required', 'in:в процессе,выполнен,есть замечания'],
+            'employee_comment' => ['nullable', 'string', 'max:4000'],
+            'intern_comment' => ['nullable', 'string', 'max:4000'],
+            'mentor_comment' => ['nullable', 'string', 'max:4000'],
+            'department_head_comment' => ['nullable', 'string', 'max:4000'],
         ]);
 
         $day = AdaptationPlanDay::query()
@@ -255,6 +259,10 @@ class AdaptationPlanController extends Controller
         $day->update([
             'date' => $validated['date'],
             'completion' => $validated['completion'],
+            'employee_comment' => $validated['employee_comment'] ?? null,
+            'intern_comment' => $validated['intern_comment'] ?? null,
+            'mentor_comment' => $validated['mentor_comment'] ?? null,
+            'department_head_comment' => $validated['department_head_comment'] ?? null,
         ]);
 
         return response()->json($day->fresh(['tasks']));
