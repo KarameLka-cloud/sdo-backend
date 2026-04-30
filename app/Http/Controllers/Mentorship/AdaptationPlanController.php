@@ -51,17 +51,17 @@ class AdaptationPlanController extends Controller
     public function index(): JsonResponse
     {
         $authUser = Auth::user();
-        $role = $authUser?->role;
+        $role = $this->resolveUserRole($authUser?->role);
         $userId = $authUser?->id;
 
         $query = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks'])->orderByDesc('id');
 
-        if ($role === UserRole::ADMIN->value) {
+        if ($role === UserRole::ADMIN) {
             $plans = $query->get();
             return response()->json($plans);
         }
 
-        if ($role === UserRole::MENTOR->value || $role === UserRole::DEPARTMENT_HEAD->value) {
+        if ($role === UserRole::MENTOR || $role === UserRole::DEPARTMENT_HEAD) {
             $plans = $query
                 ->where(function ($builder) use ($userId) {
                     $builder
@@ -288,16 +288,22 @@ class AdaptationPlanController extends Controller
 
     private function canManagePlan(AdaptationPlan $plan, ?string $role, ?int $userId): bool
     {
-        if ($role === UserRole::ADMIN->value) {
+        if ($userId === null) {
+            return false;
+        }
+
+        $resolvedRole = $this->resolveUserRole($role);
+
+        if ($resolvedRole === UserRole::ADMIN) {
             return true;
         }
 
-        if ($role === UserRole::MENTOR->value) {
-            return $plan->mentor === $userId;
+        if ((int) $plan->mentor === (int) $userId) {
+            return true;
         }
 
-        if ($role === UserRole::DEPARTMENT_HEAD->value) {
-            return $plan->department_head === $userId;
+        if ((int) $plan->department_head === (int) $userId) {
+            return true;
         }
 
         return false;
@@ -305,19 +311,19 @@ class AdaptationPlanController extends Controller
 
     private function canViewAllPlans(?string $role): bool
     {
-        return in_array($role, [
-            UserRole::ADMIN->value,
-            UserRole::MENTOR->value,
-            UserRole::DEPARTMENT_HEAD->value,
+        return in_array($this->resolveUserRole($role), [
+            UserRole::ADMIN,
+            UserRole::MENTOR,
+            UserRole::DEPARTMENT_HEAD,
         ], true);
     }
 
     private function canCreatePlan(?string $role): bool
     {
-        return in_array($role, [
-            UserRole::ADMIN->value,
-            UserRole::MENTOR->value,
-            UserRole::DEPARTMENT_HEAD->value,
+        return in_array($this->resolveUserRole($role), [
+            UserRole::ADMIN,
+            UserRole::MENTOR,
+            UserRole::DEPARTMENT_HEAD,
         ], true);
     }
 
@@ -327,7 +333,35 @@ class AdaptationPlanController extends Controller
             return true;
         }
 
-        return $plan->user_id === $userId;
+        if ($userId === null) {
+            return false;
+        }
+
+        return (int) $plan->user_id === (int) $userId;
+    }
+
+    private function resolveUserRole(?string $role): ?UserRole
+    {
+        if (!$role) {
+            return null;
+        }
+
+        $normalizedRole = mb_strtolower(trim($role));
+        $aliases = [
+            'admin' => UserRole::ADMIN,
+            'full_access' => UserRole::ADMIN,
+            'администратор' => UserRole::ADMIN,
+            'mentor' => UserRole::MENTOR,
+            'наставник' => UserRole::MENTOR,
+            'department_head' => UserRole::DEPARTMENT_HEAD,
+            'руководитель отдела' => UserRole::DEPARTMENT_HEAD,
+        ];
+
+        if (array_key_exists($normalizedRole, $aliases)) {
+            return $aliases[$normalizedRole];
+        }
+
+        return UserRole::tryFrom(strtoupper(trim($role)));
     }
 
 }
