@@ -10,6 +10,7 @@ use App\Models\Mentorship\AdaptationPlan;
 use App\Models\Mentorship\AdaptationPlanDay;
 use App\Models\Mentorship\AdaptationPlanTask;
 use App\Models\Mentorship\AdaptationPlanTemplate;
+use App\Models\User\User;
 use App\Services\Mentorship\AdaptationPlanStructureGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -96,6 +97,9 @@ class AdaptationPlanController extends Controller
         }
 
         $validated = $request->validated();
+        if ($roleErrorResponse = $this->validateAssigneeRoles($validated)) {
+            return $roleErrorResponse;
+        }
         $template = AdaptationPlanTemplate::findOrFail($validated['adaptation_plan_template_id']);
 
         if (!in_array($validated['shift'], $template->shifts ?? [], true)) {
@@ -143,11 +147,12 @@ class AdaptationPlanController extends Controller
         }
 
         $validated = $request->validated();
-        $needsRegeneration = false;
+        if ($roleErrorResponse = $this->validateAssigneeRoles($validated, $plan)) {
+            return $roleErrorResponse;
+        }
 
         if (array_key_exists('adaptation_plan_template_id', $validated)) {
             $template = AdaptationPlanTemplate::findOrFail($validated['adaptation_plan_template_id']);
-            $validated['work_schedule'] = $template->work_schedule;
             $targetShift = $validated['shift'] ?? $plan->shift;
 
             if (!in_array($targetShift, $template->shifts ?? [], true)) {
@@ -158,26 +163,36 @@ class AdaptationPlanController extends Controller
                     ],
                 ], 422);
             }
+        }
 
-            if ((int) $validated['adaptation_plan_template_id'] !== (int) $plan->adaptation_plan_template_id) {
+        DB::transaction(function () use (&$plan, $validated) {
+            $needsRegeneration = false;
+            $updatePayload = $validated;
+
+            if (array_key_exists('adaptation_plan_template_id', $updatePayload)) {
+                $template = AdaptationPlanTemplate::findOrFail($updatePayload['adaptation_plan_template_id']);
+                $updatePayload['work_schedule'] = $template->work_schedule;
+
+                if ((int) $updatePayload['adaptation_plan_template_id'] !== (int) $plan->adaptation_plan_template_id) {
+                    $needsRegeneration = true;
+                }
+            }
+
+            if (array_key_exists('shift', $updatePayload) && (int) $updatePayload['shift'] !== (int) $plan->shift) {
                 $needsRegeneration = true;
             }
-        }
 
-        if (array_key_exists('shift', $validated) && (int) $validated['shift'] !== (int) $plan->shift) {
-            $needsRegeneration = true;
-        }
+            if (array_key_exists('start_date', $updatePayload) && (string) $updatePayload['start_date'] !== $plan->start_date->toDateString()) {
+                $needsRegeneration = true;
+            }
 
-        if (array_key_exists('start_date', $validated) && (string) $validated['start_date'] !== $plan->start_date->toDateString()) {
-            $needsRegeneration = true;
-        }
+            $plan->update($updatePayload);
 
-        $plan->update($validated);
-
-        if ($needsRegeneration) {
-            $plan->load('template');
-            $this->structureGenerator->generate($plan, true);
-        }
+            if ($needsRegeneration) {
+                $plan->load('template');
+                $this->structureGenerator->generate($plan, true);
+            }
+        });
 
         return response()->json($plan->fresh(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks']));
     }
@@ -321,8 +336,6 @@ class AdaptationPlanController extends Controller
     {
         return in_array($this->resolveUserRole($role), [
             UserRole::ADMIN,
-            UserRole::MENTOR,
-            UserRole::DEPARTMENT_HEAD,
         ], true);
     }
 
@@ -370,6 +383,44 @@ class AdaptationPlanController extends Controller
         }
 
         return UserRole::tryFrom(strtoupper(trim($role)));
+    }
+
+    private function validateAssigneeRoles(array $payload, ?AdaptationPlan $currentPlan = null): ?JsonResponse
+    {
+        $mentorChanged = array_key_exists('mentor', $payload)
+            && ((int) $payload['mentor'] !== (int) $currentPlan?->mentor);
+        if ($mentorChanged && !$this->userHasRole((int) $payload['mentor'], UserRole::MENTOR)) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => [
+                    'mentor' => ['Выбранный пользователь не является наставником.'],
+                ],
+            ], 422);
+        }
+
+        $departmentHeadChanged = array_key_exists('department_head', $payload)
+            && ((int) $payload['department_head'] !== (int) $currentPlan?->department_head);
+        if ($departmentHeadChanged && !$this->userHasRole((int) $payload['department_head'], UserRole::DEPARTMENT_HEAD)) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => [
+                    'department_head' => ['Выбранный пользователь не является руководителем отдела.'],
+                ],
+            ], 422);
+        }
+
+        return null;
+    }
+
+    private function userHasRole(int $userId, UserRole $requiredRole): bool
+    {
+        $user = User::query()->with('roles')->find($userId);
+        if (!$user) {
+            return false;
+        }
+
+        $resolvedRole = $this->resolveUserRole($user->role ?? $user->role_name ?? null);
+        return $resolvedRole === $requiredRole;
     }
 
 }

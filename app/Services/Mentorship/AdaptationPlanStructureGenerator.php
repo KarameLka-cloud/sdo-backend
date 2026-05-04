@@ -150,10 +150,11 @@ class AdaptationPlanStructureGenerator
     {
         $blueprint = $this->normalizeBlueprint($this->getTemplateBlueprint());
         if (empty($blueprint)) {
-            return 14;
+            // Количество дней берется только из настроек шаблона в админке.
+            return 0;
         }
 
-        $maxDay = 1;
+        $maxDay = 0;
         foreach ($blueprint as $item) {
             $dayFrom = $item['day_from'] ?? null;
             $dayTo = $item['day_to'] ?? null;
