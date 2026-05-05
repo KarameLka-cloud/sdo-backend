@@ -11,7 +11,10 @@ class AdaptationPlanDay extends Model
     protected $fillable = [
         'adaptation_plan_id',
         'work_day',
-        'date',
+        'day_from',
+        'day_to',
+        'date_from',
+        'date_to',
         'completion',
         'employee_comment',
         'intern_comment',
@@ -20,7 +23,10 @@ class AdaptationPlanDay extends Model
     ];
 
     protected $casts = [
-        'date' => 'date:Y-m-d',
+        'date_from' => 'date:Y-m-d',
+        'date_to' => 'date:Y-m-d',
+        'day_from' => 'integer',
+        'day_to' => 'integer',
     ];
 
     public function plan(): BelongsTo

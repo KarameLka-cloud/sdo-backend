@@ -258,7 +258,8 @@ class AdaptationPlanController extends Controller
         }
 
         $validated = $request->validate([
-            'date' => ['required', 'date'],
+            'date_from' => ['required', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'completion' => ['required', 'in:в процессе,выполнен,есть замечания'],
             'employee_comment' => ['nullable', 'string', 'max:4000'],
             'intern_comment' => ['nullable', 'string', 'max:4000'],
@@ -272,7 +273,8 @@ class AdaptationPlanController extends Controller
             ->firstOrFail();
 
         $day->update([
-            'date' => $validated['date'],
+            'date_from' => $validated['date_from'],
+            'date_to' => $validated['date_to'] ?? null,
             'completion' => $validated['completion'],
             'employee_comment' => $validated['employee_comment'] ?? null,
             'intern_comment' => $validated['intern_comment'] ?? null,

@@ -21,66 +21,69 @@ class AdaptationPlanStructureGenerator
             $plan->days()->delete();
         }
 
-        $startDate = $plan->start_date->copy();
-        $totalWorkDays = $this->resolveTotalWorkDays();
-        $tasksPerDay = 3;
-        $createdWorkDays = 0;
-        $currentDate = $startDate->copy();
-        $dayOffset = 0;
-
-        while ($createdWorkDays < $totalWorkDays) {
-            if ($this->isWorkingDayForSchedule($plan->work_schedule, $dayOffset, $currentDate)) {
-                $createdWorkDays++;
-
-                $tasks = $this->buildTasksForDay($plan->shift, $tasksPerDay, $createdWorkDays);
-                if (empty($tasks) && $this->hasTemplateBlueprint()) {
-                    $currentDate->addDay();
-                    $dayOffset++;
+        if ($this->hasTemplateBlueprint()) {
+            $ranges = $this->resolveBlueprintRanges();
+            foreach ($ranges as $index => $range) {
+                $tasks = $this->buildTasksForRange($range['from'], $range['to']);
+                if (empty($tasks)) {
                     continue;
                 }
 
                 $day = AdaptationPlanDay::create([
                     'adaptation_plan_id' => $plan->id,
-                    'work_day' => $createdWorkDays,
-                    'date' => $currentDate->toDateString(),
+                    'work_day' => $index + 1,
+                    'day_from' => $range['from'],
+                    'day_to' => $range['to'],
+                    'date_from' => $this->resolveDateForWorkDay($plan->start_date->copy(), $plan->work_schedule, $range['from'])->toDateString(),
+                    'date_to' => $this->resolveDateForWorkDay($plan->start_date->copy(), $plan->work_schedule, $range['to'])->toDateString(),
                     'completion' => 'в процессе',
                 ]);
 
-                if (!empty($tasks)) {
-                    $day->tasks()->createMany($tasks);
-                }
+                $day->tasks()->createMany($tasks);
             }
 
-            $currentDate->addDay();
-            $dayOffset++;
+            $this->planContext = null;
+            return;
         }
+
+        $tasks = $this->buildDefaultTasks($plan->shift, 3);
+        $day = AdaptationPlanDay::create([
+            'adaptation_plan_id' => $plan->id,
+            'work_day' => 1,
+            'day_from' => 1,
+            'day_to' => 1,
+            'date_from' => $plan->start_date->toDateString(),
+            'date_to' => null,
+            'completion' => 'в процессе',
+        ]);
+        $day->tasks()->createMany($tasks);
 
         $this->planContext = null;
     }
 
-    private function buildTasksForDay(int $shift, int $tasksPerDay, int $workDay): array
+    private function buildTasksForRange(int $rangeFrom, int $rangeTo): array
     {
         $blueprint = $this->normalizeBlueprint($this->getTemplateBlueprint());
-        if (!empty($blueprint)) {
-            $tasksForDay = array_values(array_filter(
-                $blueprint,
-                fn(array $item) => $this->isTaskForWorkDay($item, $workDay)
-            ));
+        $tasksForDay = array_values(array_filter(
+            $blueprint,
+            fn(array $item) => $this->isTaskForRange($item, $rangeFrom, $rangeTo)
+        ));
 
-            return array_map(
-                fn(array $item) => [
-                    'description' => $item['description'],
-                    'status' => 'не выполнено',
-                    'responsible_role' => $item['responsible_role'],
-                    'links' => $item['links'],
-                ],
-                $tasksForDay
-            );
-        }
+        return array_map(
+            fn(array $item) => [
+                'description' => $item['description'],
+                'status' => 'не выполнено',
+                'responsible_role' => $item['responsible_role'],
+                'links' => $item['links'],
+            ],
+            $tasksForDay
+        );
+    }
 
+    private function buildDefaultTasks(int $shift, int $tasksPerDay): array
+    {
         $roles = ['Стажер', 'Наставник', 'Сотрудник УПиПК', 'Руководитель отдела'];
         $tasks = [];
-
         for ($index = 1; $index <= $tasksPerDay; $index++) {
             $role = $roles[($index - 1) % count($roles)];
             $tasks[] = [
@@ -117,11 +120,20 @@ class AdaptationPlanStructureGenerator
                 return null;
             }
 
+            $dayFrom = isset($item['day_from']) ? (int) $item['day_from'] : null;
+            $dayTo = isset($item['day_to']) ? (int) $item['day_to'] : null;
+            if ($dayFrom === null && $dayTo !== null) {
+                $dayFrom = $dayTo;
+            }
+            if ($dayFrom !== null && $dayTo === null) {
+                $dayTo = $dayFrom;
+            }
+
             return [
                 'description' => (string) $item['description'],
                 'responsible_role' => isset($item['responsible_role']) ? (string) $item['responsible_role'] : null,
-                'day_from' => isset($item['day_from']) ? (int) $item['day_from'] : null,
-                'day_to' => isset($item['day_to']) ? (int) $item['day_to'] : null,
+                'day_from' => $dayFrom,
+                'day_to' => $dayTo,
                 'links' => array_values(array_filter(array_map(
                     fn($link) => is_string($link) ? trim($link) : null,
                     $item['links'] ?? []
@@ -130,39 +142,51 @@ class AdaptationPlanStructureGenerator
         }, $blueprint)));
     }
 
-    private function isTaskForWorkDay(array $task, int $workDay): bool
-    {
-        $dayFrom = $task['day_from'] ?? null;
-        $dayTo = $task['day_to'] ?? null;
-
-        if ($dayFrom === null && $dayTo === null) {
-            return true;
-        }
-
-        if ($dayFrom !== null && $dayTo === null) {
-            return $workDay === $dayFrom;
-        }
-
-        return $workDay >= $dayFrom && $workDay <= $dayTo;
-    }
-
-    private function resolveTotalWorkDays(): int
+    private function resolveBlueprintRanges(): array
     {
         $blueprint = $this->normalizeBlueprint($this->getTemplateBlueprint());
         if (empty($blueprint)) {
-            // Количество дней берется только из настроек шаблона в админке.
-            return 0;
+            return [];
         }
 
-        $maxDay = 0;
+        $ranges = [];
         foreach ($blueprint as $item) {
-            $dayFrom = $item['day_from'] ?? null;
-            $dayTo = $item['day_to'] ?? null;
-            $candidate = $dayTo ?? $dayFrom ?? 1;
-            $maxDay = max($maxDay, (int) $candidate);
+            $from = $item['day_from'] ?? 1;
+            $to = $item['day_to'] ?? $from;
+            $ranges["{$from}:{$to}"] = [
+                'from' => $from,
+                'to' => $to,
+            ];
         }
 
-        return $maxDay;
+        $resolved = array_values($ranges);
+        usort($resolved, fn(array $left, array $right) => [$left['from'], $left['to']] <=> [$right['from'], $right['to']]);
+        return $resolved;
+    }
+
+    private function isTaskForRange(array $task, int $rangeFrom, int $rangeTo): bool
+    {
+        return (int) ($task['day_from'] ?? 1) === $rangeFrom
+            && (int) ($task['day_to'] ?? ($task['day_from'] ?? 1)) === $rangeTo;
+    }
+
+    private function resolveDateForWorkDay(Carbon $startDate, string $schedule, int $targetWorkDay): Carbon
+    {
+        $currentDate = $startDate->copy();
+        $createdWorkDays = 0;
+        $dayOffset = 0;
+
+        while (true) {
+            if ($this->isWorkingDayForSchedule($schedule, $dayOffset, $currentDate)) {
+                $createdWorkDays++;
+                if ($createdWorkDays === $targetWorkDay) {
+                    return $currentDate->copy();
+                }
+            }
+
+            $currentDate->addDay();
+            $dayOffset++;
+        }
     }
 
     private function isWorkingDayForSchedule(string $schedule, int $dayOffset, Carbon $date): bool
