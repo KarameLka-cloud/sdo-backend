@@ -8,7 +8,6 @@ use App\Enums\UserRole;
 use App\Models\User\Role;
 use App\Models\User\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
@@ -41,32 +40,6 @@ class RoleController extends Controller
         $validated = $request->validated();
         return $this->revokeRoleByName((int) $validated['user_id'], (string) $validated['role']);
     }
-
-    // /**
-    //  * Назначить роль admin пользователю (устаревший метод)
-    //  * @deprecated Используйте assignRole с параметром role=ADMIN
-    //  */
-    // public function assignAdminRole(Request $request): JsonResponse
-    // {
-    //     $validated = $request->validate([
-    //         'user_id' => 'required|integer|exists:users,id',
-    //     ]);
-
-    //     return $this->assignRoleByName((int) $validated['user_id'], UserRole::ADMIN->value);
-    // }
-
-    // /**
-    //  * Отозвать роль admin у пользователя (устаревший метод)
-    //  * @deprecated Используйте revokeRole с параметром role=ADMIN
-    //  */
-    // public function revokeAdminRole(Request $request): JsonResponse
-    // {
-    //     $validated = $request->validate([
-    //         'user_id' => 'required|integer|exists:users,id',
-    //     ]);
-
-    //     return $this->revokeRoleByName((int) $validated['user_id'], UserRole::ADMIN->value);
-    // }
 
     private function assignRoleByName(int $userId, string $roleName): JsonResponse
     {

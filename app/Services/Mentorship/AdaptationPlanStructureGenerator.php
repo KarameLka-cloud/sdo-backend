@@ -35,7 +35,7 @@ class AdaptationPlanStructureGenerator
                     'day_from' => $range['from'],
                     'day_to' => $range['to'],
                     'date_from' => $this->resolveDateForWorkDay($plan->start_date->copy(), $plan->work_schedule, $range['from'])->toDateString(),
-                    'date_to' => $this->resolveDateForWorkDay($plan->start_date->copy(), $plan->work_schedule, $range['to'])->toDateString(),
+                    'date_to' => null,
                     'completion' => 'в процессе',
                 ]);
 

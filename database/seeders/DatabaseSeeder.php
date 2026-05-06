@@ -7,8 +7,6 @@ use Database\Seeders\User\PositionSeeder;
 use Database\Seeders\User\RoleSeeder;
 use Illuminate\Database\Seeder;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-
 class DatabaseSeeder extends Seeder
 {
     /**
