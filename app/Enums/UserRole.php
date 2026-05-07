@@ -43,13 +43,13 @@ enum Permission: string
     // Полные права (только для администратора)
     case FULL_ACCESS = 'full_access';
 
-    // Права наставника
+        // Права наставника
     case MANAGE_EDO = 'manage_edo';
     case MANAGE_EDUCATION = 'manage_education';
     case VIEW_ALL_USERS = 'view_all_users';
     case VIEW_DEPARTMENT_USERS = 'view_department_users';
 
-    // Права руководителя отдела
+        // Права руководителя отдела
     case VIEW_DEPARTMENT_REPORT = 'view_department_report';
     case MANAGE_DEPARTMENT_STAFF = 'manage_department_staff';
 

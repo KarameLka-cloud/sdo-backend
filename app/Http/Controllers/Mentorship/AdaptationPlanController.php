@@ -22,8 +22,7 @@ class AdaptationPlanController extends Controller
 {
     public function __construct(
         private readonly AdaptationPlanStructureGenerator $structureGenerator
-    ) {
-    }
+    ) {}
 
     public function all(): JsonResponse
     {
@@ -424,5 +423,4 @@ class AdaptationPlanController extends Controller
         $resolvedRole = $this->resolveUserRole($user->role ?? $user->role_name ?? null);
         return $resolvedRole === $requiredRole;
     }
-
 }
