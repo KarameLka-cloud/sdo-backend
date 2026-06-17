@@ -11,7 +11,7 @@ class EducationCourseController extends Controller
 {
     public function index(): JsonResponse
     {
-        $courses = EducationCourse::orderBy('date_end', 'desc')->get();
+        $courses = EducationCourse::orderBy('date', 'desc')->get();
         return response()->json($courses);
     }
 

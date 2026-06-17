@@ -25,9 +25,10 @@ class WebinarRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string'],
-            'time_start' => ['required', 'date_format:H:i'],
-            'time_end' => ['required', 'date_format:H:i'],
+            'link' => ['nullable', 'string'],
+            'time' => ['nullable', 'date_format:H:i'],
             'date' => ['required', 'date'],
+            'duration' => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -36,13 +37,38 @@ class WebinarRequest extends FormRequest
         return [
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
-            'time_start.required' => 'Time is required.',
-            'time_start.date' => 'Time must be a time',
-            'time_end.required' => 'Time is required.',
-            'time_end.date' => 'Time must be a time',
+            'link.string' => 'Link must be a string.',
+            'time.date_format' => 'Time must be a time.',
             'date.required' => 'Date is required.',
             'date.date' => 'Date must be a date.',
+            'duration.required' => 'Duration is required.',
+            'duration.integer' => 'Duration must be an integer.',
+            'duration.min' => 'Duration must be at least 1 minute.',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge($this->normalizeNullableStrings([
+            'link',
+            'time',
+        ]));
+    }
+
+    private function normalizeNullableStrings(array $fields): array
+    {
+        $normalized = [];
+
+        foreach ($fields as $field) {
+            if (!$this->has($field)) {
+                continue;
+            }
+
+            $value = $this->input($field);
+            $normalized[$field] = is_string($value) && trim($value) === '' ? null : $value;
+        }
+
+        return $normalized;
     }
 
     protected function failedValidation(Validator $validator): void

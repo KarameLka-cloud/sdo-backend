@@ -8,9 +8,10 @@ class EducationWebinar extends Model
 {
     protected $fillable = [
         'title',
-        'time_start',
-        'time_end',
+        'link',
+        'time',
         'date',
+        'duration',
     ];
 
     protected $hidden = [

@@ -9,10 +9,11 @@ class EducationCourse extends Model
 {
     protected $fillable = [
         'title',
-        'url',
+        'link',
         'department_id',
         'note_department',
-        'date_end',
+        'date',
+        'duration',
     ];
 
     protected $hidden = [

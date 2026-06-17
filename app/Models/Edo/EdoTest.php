@@ -9,10 +9,11 @@ class EdoTest extends Model
 {
     protected $fillable = [
         'title',
-        'url',
+        'link',
         'position_id',
         'note_position',
-        'date_end',
+        'date',
+        'duration',
     ];
 
     protected $hidden = [

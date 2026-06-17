@@ -25,10 +25,11 @@ class CourseRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string'],
-            'url' => ['required', 'string'],
+            'link' => ['required', 'string'],
             'department_id' => ['required', 'numeric'],
             'note_department' => ['nullable', 'string'],
-            'date_end' => ['required', 'date'],
+            'date' => ['required', 'date'],
+            'duration' => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -37,14 +38,38 @@ class CourseRequest extends FormRequest
         return [
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
-            'url.required' => 'Url is required.',
-            'url.string' => 'Url must be a string.',
+            'link.required' => 'Link is required.',
+            'link.string' => 'Link must be a string.',
             'department_id.required' => 'Department is required.',
             'department_id.numeric' => 'Department must be a number.',
             'note_department.string' => 'Note department must be a string.',
-            'date_end.required' => 'Date is required.',
-            'date_end.date' => 'Date must be a date.',
+            'date.required' => 'Date is required.',
+            'date.date' => 'Date must be a date.',
+            'duration.required' => 'Duration is required.',
+            'duration.integer' => 'Duration must be an integer.',
+            'duration.min' => 'Duration must be at least 1 minute.',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge($this->normalizeNullableStrings(['note_department']));
+    }
+
+    private function normalizeNullableStrings(array $fields): array
+    {
+        $normalized = [];
+
+        foreach ($fields as $field) {
+            if (!$this->has($field)) {
+                continue;
+            }
+
+            $value = $this->input($field);
+            $normalized[$field] = is_string($value) && trim($value) === '' ? null : $value;
+        }
+
+        return $normalized;
     }
 
     protected function failedValidation(Validator $validator): void

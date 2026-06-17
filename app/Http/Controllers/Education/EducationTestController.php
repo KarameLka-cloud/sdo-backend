@@ -11,7 +11,7 @@ class EducationTestController extends Controller
 {
     public function index(): JsonResponse
     {
-        $tests = EducationTest::orderBy('date_end', 'desc')->get();
+        $tests = EducationTest::orderBy('date', 'desc')->get();
         return response()->json($tests);
     }
 

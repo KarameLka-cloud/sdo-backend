@@ -15,6 +15,7 @@ class EducationEvent extends Model
         'note_department',
         'time',
         'date',
+        'duration',
     ];
 
     protected $hidden = [
