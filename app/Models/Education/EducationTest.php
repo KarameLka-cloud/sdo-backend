@@ -9,6 +9,7 @@ class EducationTest extends Model
 {
     protected $fillable = [
         'title',
+        'description',
         'link',
         'position_id',
         'note_position',

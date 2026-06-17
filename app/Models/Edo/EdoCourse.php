@@ -9,6 +9,7 @@ class EdoCourse extends Model
 {
     protected $fillable = [
         'title',
+        'description',
         'link',
         'department_id',
         'note_department',

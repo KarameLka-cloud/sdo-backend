@@ -25,6 +25,7 @@ class TestRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string'],
+            'description' => ['nullable', 'string'],
             'link' => ['required', 'string'],
             'position_id' => ['required', 'numeric'],
             'note_position' => ['nullable', 'string'],
@@ -38,6 +39,7 @@ class TestRequest extends FormRequest
         return [
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
+            'description.string' => 'Description must be a string.',
             'link.required' => 'Link is required.',
             'link.string' => 'Link must be a string.',
             'position_id.required' => 'Position is required.',
@@ -53,7 +55,7 @@ class TestRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge($this->normalizeNullableStrings(['note_position']));
+        $this->merge($this->normalizeNullableStrings(['description', 'note_position']));
     }
 
     private function normalizeNullableStrings(array $fields): array

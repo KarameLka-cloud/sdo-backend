@@ -25,6 +25,7 @@ class WebinarRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string'],
+            'description' => ['nullable', 'string'],
             'link' => ['nullable', 'string'],
             'time' => ['nullable', 'date_format:H:i'],
             'date' => ['required', 'date'],
@@ -37,6 +38,7 @@ class WebinarRequest extends FormRequest
         return [
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
+            'description.string' => 'Description must be a string.',
             'link.string' => 'Link must be a string.',
             'time.date_format' => 'Time must be a time.',
             'date.required' => 'Date is required.',
@@ -50,6 +52,7 @@ class WebinarRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge($this->normalizeNullableStrings([
+            'description',
             'link',
             'time',
         ]));

@@ -8,6 +8,7 @@ class EducationWebinar extends Model
 {
     protected $fillable = [
         'title',
+        'description',
         'link',
         'time',
         'date',

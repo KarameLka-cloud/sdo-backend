@@ -25,6 +25,7 @@ class CourseRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string'],
+            'description' => ['nullable', 'string'],
             'link' => ['required', 'string'],
             'department_id' => ['required', 'numeric'],
             'note_department' => ['nullable', 'string'],
@@ -38,6 +39,7 @@ class CourseRequest extends FormRequest
         return [
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
+            'description.string' => 'Description must be a string.',
             'link.required' => 'Link is required.',
             'link.string' => 'Link must be a string.',
             'department_id.required' => 'Department is required.',
@@ -53,7 +55,7 @@ class CourseRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge($this->normalizeNullableStrings(['note_department']));
+        $this->merge($this->normalizeNullableStrings(['description', 'note_department']));
     }
 
     private function normalizeNullableStrings(array $fields): array
