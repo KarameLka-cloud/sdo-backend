@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     public function index(): JsonResponse
     {
-        $users = User::all();
+        $users = User::query()->with('roles')->get();
         return response()->json($users);
     }
 
@@ -36,13 +36,15 @@ class UserController extends Controller
     private function usersByRole(UserRole $role)
     {
         $roleName = $role->value;
-        $roleNameLower = strtolower($roleName);
         $displayName = $role->label();
 
-        return User::whereHas('roles', function ($query) use ($roleName, $roleNameLower, $displayName): void {
-            $query->where('name', $roleName)
-                ->orWhereRaw('LOWER(name) = ?', [$roleNameLower])
-                ->orWhere('display_name', $displayName);
-        })->get();
+        return User::query()
+            ->with('roles')
+            ->whereHas('roles', function ($query) use ($roleName, $displayName): void {
+                $query->where('name', $roleName)
+                    ->orWhereRaw('LOWER(name) = ?', [strtolower($roleName)])
+                    ->orWhere('display_name', $displayName);
+            })
+            ->get();
     }
 }

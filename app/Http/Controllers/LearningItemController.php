@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class LearningItemController extends Controller
 {
+    private const RELATION_LOAD = ['departmentRelation', 'positionRelation'];
+
     public function index(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -18,6 +20,7 @@ class LearningItemController extends Controller
         ]);
 
         $items = LearningItem::query()
+            ->with(self::RELATION_LOAD)
             ->where('category', $validated['category'])
             ->where('type', $validated['type'])
             ->orderBy('date', 'desc')
@@ -36,13 +39,14 @@ class LearningItemController extends Controller
     public function store(LearningItemRequest $request): JsonResponse
     {
         $item = LearningItem::create($request->validated());
+        $item->load(self::RELATION_LOAD);
 
         return response()->json($item);
     }
 
     public function show($id): JsonResponse
     {
-        $item = LearningItem::findOrFail($id);
+        $item = LearningItem::with(self::RELATION_LOAD)->findOrFail($id);
 
         return response()->json($item);
     }
@@ -51,6 +55,7 @@ class LearningItemController extends Controller
     {
         $item = LearningItem::findOrFail($id);
         $item->update($request->validated());
+        $item->load(self::RELATION_LOAD);
 
         return response()->json($item);
     }

@@ -38,7 +38,7 @@ class DepartmentController extends Controller
             return response()->json($department->errors(), 422);
         }
 
-        $createdDepartment = Department::create($request->all());
+        $createdDepartment = Department::create($department->validated());
         return response()->json($createdDepartment, 201);
     }
 
@@ -63,7 +63,7 @@ class DepartmentController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $department->update($request->all());
+        $department->update($validator->validated());
 
         return response()->json($department);
     }

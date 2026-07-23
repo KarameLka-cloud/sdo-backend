@@ -47,6 +47,8 @@ class LearningItem extends Model
     protected $hidden = [
         'created_at',
         'updated_at',
+        'departmentRelation',
+        'positionRelation',
     ];
 
     protected $appends = [
@@ -66,11 +68,19 @@ class LearningItem extends Model
 
     public function getDepartmentAttribute(): ?string
     {
-        return $this->departmentRelation()->pluck('name')->first();
+        if ($this->relationLoaded('departmentRelation')) {
+            return $this->departmentRelation?->name;
+        }
+
+        return $this->departmentRelation()->value('name');
     }
 
     public function getPositionAttribute(): ?string
     {
-        return $this->positionRelation()->pluck('name')->first();
+        if ($this->relationLoaded('positionRelation')) {
+            return $this->positionRelation?->name;
+        }
+
+        return $this->positionRelation()->value('name');
     }
 }

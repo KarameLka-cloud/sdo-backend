@@ -18,16 +18,18 @@ class LoginController extends Controller
 
         if (!Auth::attempt([
             'samaccountname' => $credentials['login'],
-            'password' => $credentials['password']
+            'password' => $credentials['password'],
         ])) {
-            return response()->json(['message' => 'Пользователь не найден'], 401);
+            return response()->json(['message' => 'Неверный логин или пароль'], 401);
         }
 
-        $token = $request->user()->createToken('auth_token')->plainTextToken;
+        $user = $request->user();
+        $user->loadMissing('roles');
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'auth_token' => $token,
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 }

@@ -28,20 +28,20 @@ class LearningItemRequest extends FormRequest
             'duration' => ['required', 'integer', 'min:1'],
             'link' => ['nullable', 'string'],
             'time' => ['nullable', 'date_format:H:i'],
-            'department_id' => ['nullable', 'numeric'],
+            'department_id' => ['nullable', 'numeric', 'exists:departments,id'],
             'note_department' => ['nullable', 'string'],
-            'position_id' => ['nullable', 'numeric'],
+            'position_id' => ['nullable', 'numeric', 'exists:positions,id'],
             'note_position' => ['nullable', 'string'],
         ];
 
         return match ($type) {
             LearningItem::TYPE_EVENT => array_merge($rules, [
-                'department_id' => ['required', 'numeric'],
+                'department_id' => ['required', 'numeric', 'exists:departments,id'],
                 'link' => ['nullable', 'string'],
                 'time' => ['nullable', 'date_format:H:i'],
             ]),
             LearningItem::TYPE_COURSE => array_merge($rules, [
-                'department_id' => ['required', 'numeric'],
+                'department_id' => ['required', 'numeric', 'exists:departments,id'],
                 'link' => ['required', 'string'],
             ]),
             LearningItem::TYPE_WEBINAR => array_merge($rules, [
@@ -49,7 +49,7 @@ class LearningItemRequest extends FormRequest
                 'time' => ['nullable', 'date_format:H:i'],
             ]),
             LearningItem::TYPE_TEST => array_merge($rules, [
-                'position_id' => ['required', 'numeric'],
+                'position_id' => ['required', 'numeric', 'exists:positions,id'],
                 'link' => ['required', 'string'],
             ]),
             default => $rules,
@@ -70,9 +70,11 @@ class LearningItemRequest extends FormRequest
             'link.string' => 'Link must be a string.',
             'department_id.required' => 'Department is required.',
             'department_id.numeric' => 'Department must be a number.',
+            'department_id.exists' => 'Department does not exist.',
             'note_department.string' => 'Note department must be a string.',
             'position_id.required' => 'Position is required.',
             'position_id.numeric' => 'Position must be a number.',
+            'position_id.exists' => 'Position does not exist.',
             'note_position.string' => 'Note position must be a string.',
             'time.date_format' => 'Time must be a time.',
             'date.required' => 'Date is required.',

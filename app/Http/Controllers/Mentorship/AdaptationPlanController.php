@@ -30,7 +30,7 @@ class AdaptationPlanController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $plans = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks'])
+        $plans = AdaptationPlan::with(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks'])
             ->orderByDesc('id')
             ->get();
 
@@ -40,7 +40,7 @@ class AdaptationPlanController extends Controller
     public function my(): JsonResponse
     {
         $authUser = Auth::user();
-        $plan = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks'])
+        $plan = AdaptationPlan::with(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks'])
             ->where('user_id', $authUser?->id)
             ->orderByDesc('id')
             ->first();
@@ -54,7 +54,7 @@ class AdaptationPlanController extends Controller
         $role = $this->resolveUserRole($authUser?->role);
         $userId = $authUser?->id;
 
-        $query = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks'])->orderByDesc('id');
+        $query = AdaptationPlan::with(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks'])->orderByDesc('id');
 
         if ($role === UserRole::ADMIN) {
             $plans = $query->get();
@@ -79,7 +79,7 @@ class AdaptationPlanController extends Controller
 
     public function show($id): JsonResponse
     {
-        $plan = AdaptationPlan::with(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks'])->findOrFail($id);
+        $plan = AdaptationPlan::with(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks'])->findOrFail($id);
         $authUser = Auth::user();
 
         if (!$this->canViewPlan($plan, $authUser?->role, $authUser?->id)) {
@@ -133,7 +133,7 @@ class AdaptationPlanController extends Controller
             throw $exception;
         }
 
-        return response()->json($plan->fresh(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks']), 201);
+        return response()->json($plan->fresh(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks']), 201);
     }
 
     public function update(AdaptationPlanUpdateRequest $request, $id): JsonResponse
@@ -193,7 +193,7 @@ class AdaptationPlanController extends Controller
             }
         });
 
-        return response()->json($plan->fresh(['user', 'mentorUser', 'departmentHeadUser', 'template', 'days.tasks']));
+        return response()->json($plan->fresh(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks']));
     }
 
     public function destroy($id): JsonResponse

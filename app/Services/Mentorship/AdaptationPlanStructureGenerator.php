@@ -29,13 +29,26 @@ class AdaptationPlanStructureGenerator
                     continue;
                 }
 
+                $dateFrom = $this->resolveDateForWorkDay(
+                    $plan->start_date->copy(),
+                    $plan->work_schedule,
+                    $range['from']
+                );
+                $dateTo = $range['to'] > $range['from']
+                    ? $this->resolveDateForWorkDay(
+                        $plan->start_date->copy(),
+                        $plan->work_schedule,
+                        $range['to']
+                    )
+                    : null;
+
                 $day = AdaptationPlanDay::create([
                     'adaptation_plan_id' => $plan->id,
                     'work_day' => $index + 1,
                     'day_from' => $range['from'],
                     'day_to' => $range['to'],
-                    'date_from' => $this->resolveDateForWorkDay($plan->start_date->copy(), $plan->work_schedule, $range['from'])->toDateString(),
-                    'date_to' => null,
+                    'date_from' => $dateFrom->toDateString(),
+                    'date_to' => $dateTo?->toDateString(),
                     'completion' => 'в процессе',
                 ]);
 

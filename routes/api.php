@@ -16,12 +16,12 @@ use App\Http\Controllers\User\RoleController;
 use App\Http\Controllers\LearningItemController;
 
 Route::group(['prefix' => 'auth'], function () {
-    Route::post('login', LoginController::class);
+    Route::post('login', LoginController::class)->middleware('throttle:5,1');
     Route::post('logout', LogoutController::class)->middleware('auth:sanctum');
 });
 
 Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () {
-    Route::get('me', fn() => response()->json(Auth::user()));
+    Route::get('me', fn() => response()->json(Auth::user()?->loadMissing('roles')));
     Route::get('mentors', [UserController::class, 'mentors']);
     Route::get('department-heads', [UserController::class, 'departmentHeads']);
     Route::get('/', [UserController::class, 'index']);

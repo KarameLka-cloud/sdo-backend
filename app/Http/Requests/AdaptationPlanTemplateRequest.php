@@ -15,7 +15,7 @@ class AdaptationPlanTemplateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'work_schedule' => ['required', 'string', 'max:50'],
+            'work_schedule' => ['required', 'string', 'in:5/2,2/2'],
             'shifts' => ['required', 'array', 'min:1'],
             'shifts.*' => ['required', 'integer', 'min:1', 'max:12', 'distinct'],
             'task_blueprint' => ['nullable', 'array'],
@@ -23,7 +23,7 @@ class AdaptationPlanTemplateRequest extends FormRequest
             'task_blueprint.*.responsible_role' => [
                 'nullable',
                 'string',
-                'in:Руководитель отдела,Наставник,Сотрудник УПиПК',
+                'in:Руководитель отдела,Наставник,Сотрудник УПиПК,Стажер',
             ],
             'task_blueprint.*.day_from' => ['nullable', 'integer', 'min:1', 'max:365'],
             'task_blueprint.*.day_to' => ['nullable', 'integer', 'min:1', 'max:365'],

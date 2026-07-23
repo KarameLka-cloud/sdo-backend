@@ -48,8 +48,6 @@ class RolePermission
         if (!Permission::hasPermission($userRole, $requiredPermission)) {
             return response()->json([
                 'message' => 'Forbidden. You do not have required permission.',
-                'required' => $permission,
-                'user_role' => $roleName,
             ], 403);
         }
 

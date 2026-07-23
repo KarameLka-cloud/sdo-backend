@@ -38,7 +38,7 @@ class PositionController extends Controller
             return response()->json($position->errors(), 422);
         }
 
-        $createdPosition = Position::create($request->all());
+        $createdPosition = Position::create($position->validated());
         return response()->json($createdPosition, 201);
     }
 
@@ -63,7 +63,7 @@ class PositionController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $position->update($request->all());
+        $position->update($validator->validated());
 
         return response()->json($position);
     }
