@@ -29,9 +29,7 @@ Route::group(['prefix' => 'users', 'middleware' => 'auth:sanctum'], function () 
     Route::post('assign-role', [RoleController::class, 'assignRole'])->middleware('role:full_access');
     Route::post('revoke-role', [RoleController::class, 'revokeRole'])->middleware('role:full_access');
     Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
-    Route::apiResource('departments', DepartmentController::class)->only(['store', 'update', 'destroy'])->middleware('role:full_access');
     Route::apiResource('positions', PositionController::class)->only(['index', 'show']);
-    Route::apiResource('positions', PositionController::class)->only(['store', 'update', 'destroy'])->middleware('role:full_access');
 });
 
 Route::group(['prefix' => 'learning-items', 'middleware' => 'auth:sanctum'], function () {
@@ -50,6 +48,5 @@ Route::group(['prefix' => 'mentorship', 'middleware' => 'auth:sanctum'], functio
     Route::patch('adaptation-plans/my/days/{dayId}/tasks/{taskId}/status', [AdaptationPlanController::class, 'updateMyTaskStatus']);
     Route::patch('adaptation-plans/{id}/days/{dayId}', [AdaptationPlanController::class, 'updateDay']);
     Route::patch('adaptation-plans/{id}/days/{dayId}/tasks/{taskId}/status', [AdaptationPlanController::class, 'updateTaskStatus']);
-    Route::get('adaptation-plans/all', [AdaptationPlanController::class, 'all']);
     Route::apiResource('adaptation-plans', AdaptationPlanController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
 });

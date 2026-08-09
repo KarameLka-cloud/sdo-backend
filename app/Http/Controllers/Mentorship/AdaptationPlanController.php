@@ -24,19 +24,6 @@ class AdaptationPlanController extends Controller
         private readonly AdaptationPlanStructureGenerator $structureGenerator
     ) {}
 
-    public function all(): JsonResponse
-    {
-        if (!$this->canViewAllPlans(Auth::user()?->role)) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        $plans = AdaptationPlan::with(['user.roles', 'mentorUser.roles', 'departmentHeadUser.roles', 'template', 'days.tasks'])
-            ->orderByDesc('id')
-            ->get();
-
-        return response()->json($plans);
-    }
-
     public function my(): JsonResponse
     {
         $authUser = Auth::user();
@@ -331,13 +318,6 @@ class AdaptationPlanController extends Controller
         }
 
         return false;
-    }
-
-    private function canViewAllPlans(?string $role): bool
-    {
-        return in_array($this->resolveUserRole($role), [
-            UserRole::ADMIN,
-        ], true);
     }
 
     private function canCreatePlan(?string $role): bool
