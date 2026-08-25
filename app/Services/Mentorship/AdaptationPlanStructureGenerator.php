@@ -10,10 +10,9 @@ class AdaptationPlanStructureGenerator
 {
     public function generate(AdaptationPlan $plan, bool $forceRegenerate = false): void
     {
-        $this->planContext = $plan->loadMissing('template');
+        $plan->loadMissing('template');
 
         if (!$forceRegenerate && $plan->days()->exists()) {
-            $this->planContext = null;
             return;
         }
 
@@ -21,11 +20,13 @@ class AdaptationPlanStructureGenerator
             $plan->days()->delete();
         }
 
-        if ($this->hasTemplateBlueprint()) {
-            $ranges = $this->resolveBlueprintRanges();
+        $blueprint = $this->normalizeBlueprint($plan->template?->task_blueprint);
+
+        if ($blueprint !== []) {
+            $ranges = $this->resolveBlueprintRanges($blueprint);
             foreach ($ranges as $index => $range) {
-                $tasks = $this->buildTasksForRange($range['from'], $range['to']);
-                if (empty($tasks)) {
+                $tasks = $this->buildTasksForRange($blueprint, $range['from'], $range['to']);
+                if ($tasks === []) {
                     continue;
                 }
 
@@ -55,11 +56,9 @@ class AdaptationPlanStructureGenerator
                 $day->tasks()->createMany($tasks);
             }
 
-            $this->planContext = null;
             return;
         }
 
-        $tasks = $this->buildDefaultTasks($plan->shift, 3);
         $day = AdaptationPlanDay::create([
             'adaptation_plan_id' => $plan->id,
             'work_day' => 1,
@@ -69,14 +68,15 @@ class AdaptationPlanStructureGenerator
             'date_to' => null,
             'completion' => 'в процессе',
         ]);
-        $day->tasks()->createMany($tasks);
-
-        $this->planContext = null;
+        $day->tasks()->createMany($this->buildDefaultTasks($plan->shift, 3));
     }
 
-    private function buildTasksForRange(int $rangeFrom, int $rangeTo): array
+    /**
+     * @param  list<array<string, mixed>>  $blueprint
+     * @return list<array{description: string, status: string, responsible_role: mixed, links: array}>
+     */
+    private function buildTasksForRange(array $blueprint, int $rangeFrom, int $rangeTo): array
     {
-        $blueprint = $this->normalizeBlueprint($this->getTemplateBlueprint());
         $tasksForDay = array_values(array_filter(
             $blueprint,
             fn(array $item) => $this->isTaskForRange($item, $rangeFrom, $rangeTo)
@@ -108,18 +108,6 @@ class AdaptationPlanStructureGenerator
         }
 
         return $tasks;
-    }
-
-    private ?AdaptationPlan $planContext = null;
-
-    private function getTemplateBlueprint(): ?array
-    {
-        return $this->planContext?->template?->task_blueprint;
-    }
-
-    private function hasTemplateBlueprint(): bool
-    {
-        return !empty($this->normalizeBlueprint($this->getTemplateBlueprint()));
     }
 
     private function normalizeBlueprint(?array $blueprint): array
@@ -155,10 +143,13 @@ class AdaptationPlanStructureGenerator
         }, $blueprint)));
     }
 
-    private function resolveBlueprintRanges(): array
+    /**
+     * @param  list<array<string, mixed>>  $blueprint
+     * @return list<array{from: int, to: int}>
+     */
+    private function resolveBlueprintRanges(array $blueprint): array
     {
-        $blueprint = $this->normalizeBlueprint($this->getTemplateBlueprint());
-        if (empty($blueprint)) {
+        if ($blueprint === []) {
             return [];
         }
 
@@ -174,6 +165,7 @@ class AdaptationPlanStructureGenerator
 
         $resolved = array_values($ranges);
         usort($resolved, fn(array $left, array $right) => [$left['from'], $left['to']] <=> [$right['from'], $right['to']]);
+
         return $resolved;
     }
 

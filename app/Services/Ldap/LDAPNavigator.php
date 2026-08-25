@@ -26,37 +26,95 @@ class LDAPNavigator
         'mail' => 'Эл. почта:',
     ];
 
-    private string $englishKeyboard = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?';
+    private const ENGLISH_KEYBOARD = 'qwertyuiop[]asdfghjkl;\'zxcvbnm,./QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>?';
 
-    private string $russianKeyboard = 'йцукенгшщзхъфывапролджэячсмитьбю.ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,';
+    private const RUSSIAN_KEYBOARD = 'йцукенгшщзхъфывапролджэячсмитьбю.ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,';
+
+    /** @var array<string, int>|null */
+    private static ?array $charOrderMap = null;
+
+    /** @var array<string, string>|null */
+    private static ?array $enToRuMap = null;
 
     public function __construct()
     {
-        $this->server = env('LDAP_DEFAULT_HOSTS', env('LDAP_HOST', '127.0.0.1'));
-        $this->port = env('LDAP_DEFAULT_PORT', env('LDAP_PORT', 389));
-        $this->user = env('LDAP_DEFAULT_USERNAME', env('LDAP_USERNAME', ''));
-        $this->password = env('LDAP_DEFAULT_PASSWORD', env('LDAP_PASSWORD', ''));
-        $this->dn = env('LDAP_DEFAULT_BASE_DN', env('LDAP_BASE_DN', ''));
+        $connection = config('ldap.connections.default');
+
+        $this->server = $connection['hosts'][0] ?? '127.0.0.1';
+        $this->port = $connection['port'] ?? 389;
+        $this->user = $connection['username'] ?? '';
+        $this->password = $connection['password'] ?? '';
+        $this->dn = $connection['base_dn'] ?? '';
     }
 
-    private function changeEnglishKeyboardLayout($search)
+    /**
+     * "Менеджер + Иркутск 1" → [["Менеджер"], ["Иркутск", "1"]]
+     * "Менеджер Иркутск Гоголя" → [["Менеджер"], ["Иркутск"], ["Гоголя"]]
+     *
+     * Сегменты через + — AND. Слова внутри сегмента должны быть в одном атрибуте.
+     *
+     * @return list<list<string>>
+     */
+    public function parseSearchGroups(string $query): array
     {
-        $englishLetterList = preg_split('//u', $this->englishKeyboard, -1, PREG_SPLIT_NO_EMPTY);
-        $russianLetterList = preg_split('//u', $this->russianKeyboard, -1, PREG_SPLIT_NO_EMPTY);
-        $searchLetterList = preg_split('//u', $search, -1, PREG_SPLIT_NO_EMPTY);
-        $result = [];
-
-        foreach ($searchLetterList as $searchLetter) {
-            $index = array_search($searchLetter, $englishLetterList, true);
-            $result[] = ($index === false) ? $searchLetter : $russianLetterList[$index];
+        $query = trim($query);
+        if ($query === '') {
+            return [];
         }
 
-        return implode('', $result);
+        $hasSeparators = (bool) preg_match('/[+;|]/u', $query);
+
+        if ($hasSeparators) {
+            $segments = preg_split('/\s*[+;|]+\s*/u', $query, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        } else {
+            $segments = preg_split('/\s+/u', $query, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        }
+
+        $groups = [];
+        foreach ($segments as $segment) {
+            $segment = trim($segment);
+            if ($segment === '') {
+                continue;
+            }
+
+            if ($hasSeparators) {
+                $words = preg_split('/\s+/u', $segment, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                if ($words !== []) {
+                    $groups[] = array_values($words);
+                }
+            } else {
+                $groups[] = [$segment];
+            }
+        }
+
+        return $groups;
     }
 
-    private function testEnglishKeyboardLayout($search)
+    private function enToRuMap(): array
     {
-        $pattern = '/^[' . preg_quote($this->englishKeyboard, '/') . ']*$/';
+        if (self::$enToRuMap === null) {
+            $english = preg_split('//u', self::ENGLISH_KEYBOARD, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $russian = preg_split('//u', self::RUSSIAN_KEYBOARD, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            self::$enToRuMap = array_combine($english, $russian) ?: [];
+        }
+
+        return self::$enToRuMap;
+    }
+
+    private function changeEnglishKeyboardLayout(string $search): string
+    {
+        $map = $this->enToRuMap();
+        $letters = preg_split('//u', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return implode('', array_map(
+            static fn(string $letter): string => $map[$letter] ?? $letter,
+            $letters
+        ));
+    }
+
+    private function testEnglishKeyboardLayout(string $search): bool
+    {
+        $pattern = '/^[' . preg_quote(self::ENGLISH_KEYBOARD, '/') . ']*$/';
 
         return (bool) preg_match($pattern, $search);
     }
@@ -108,7 +166,7 @@ class LDAPNavigator
      */
     private function createGroupCondition(array $words): string
     {
-        $words = array_values(array_filter($words, static fn ($word) => $word !== ''));
+        $words = array_values(array_filter($words, static fn($word) => $word !== ''));
         if ($words === []) {
             return '';
         }
@@ -236,16 +294,27 @@ class LDAPNavigator
         return $cleaned !== false ? $cleaned : '';
     }
 
+    /** @return array<string, int> */
+    private static function charOrderMap(): array
+    {
+        if (self::$charOrderMap === null) {
+            $chars = [
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'а', 'б', 'в', 'г', 'д', 'е', 'ё',
+                'ж', 'з', 'и', 'й', 'к', 'л', 'м',
+                'н', 'о', 'п', 'р', 'с', 'т', 'у',
+                'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ',
+                'ы', 'ь', 'э', 'ю', 'я',
+            ];
+            self::$charOrderMap = array_flip($chars);
+        }
+
+        return self::$charOrderMap;
+    }
+
     private static function compare($a, $b): int
     {
-        $charOrderList = [
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'а', 'б', 'в', 'г', 'д', 'е', 'ё',
-            'ж', 'з', 'и', 'й', 'к', 'л', 'м',
-            'н', 'о', 'п', 'р', 'с', 'т', 'у',
-            'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ъ',
-            'ы', 'ь', 'э', 'ю', 'я',
-        ];
+        $orderMap = self::charOrderMap();
 
         $a = mb_strtolower($a);
         $b = mb_strtolower($b);
@@ -256,15 +325,8 @@ class LDAPNavigator
         for ($i = 0; $i < $aLength && $i < $bLength; $i++) {
             $aChar = mb_substr($a, $i, 1);
             $bChar = mb_substr($b, $i, 1);
-            $aCharOrder = array_search($aChar, $charOrderList, true);
-            $bCharOrder = array_search($bChar, $charOrderList, true);
-
-            if ($aCharOrder === false) {
-                $aCharOrder = PHP_INT_MAX;
-            }
-            if ($bCharOrder === false) {
-                $bCharOrder = PHP_INT_MAX;
-            }
+            $aCharOrder = $orderMap[$aChar] ?? PHP_INT_MAX;
+            $bCharOrder = $orderMap[$bChar] ?? PHP_INT_MAX;
 
             if ($aCharOrder !== $bCharOrder) {
                 return $aCharOrder - $bCharOrder;

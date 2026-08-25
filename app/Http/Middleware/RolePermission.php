@@ -3,13 +3,17 @@
 namespace App\Http\Middleware;
 
 use App\Enums\Permission;
-use App\Enums\UserRole;
+use App\Services\User\RoleResolver;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class RolePermission
 {
+    public function __construct(
+        private readonly RoleResolver $roleResolver,
+    ) {}
+
     /**
      * Handle an incoming request.
      * Проверка прав доступа на основе роли пользователя
@@ -22,20 +26,14 @@ class RolePermission
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Получаем роль пользователя
-        $roleName = $user->role;
+        $user->loadMissing('roles');
 
-        if (!$roleName) {
+        $userRole = $this->roleResolver->resolve($user->role);
+
+        if (!$userRole) {
             return response()->json(['message' => 'Role not assigned'], 403);
         }
 
-        try {
-            $userRole = UserRole::from($roleName);
-        } catch (\ValueError $e) {
-            return response()->json(['message' => 'Invalid role'], 403);
-        }
-
-        // Проверяем, есть ли у пользователя необходимое право
         try {
             $requiredPermission = Permission::from($permission);
         } catch (\ValueError $e) {

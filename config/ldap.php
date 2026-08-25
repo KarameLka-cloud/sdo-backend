@@ -29,14 +29,14 @@ return [
     'connections' => [
 
         'default' => [
-            'hosts' => [env('LDAP_HOST', '127.0.0.1')],
-            'username' => env('LDAP_USERNAME', 'cn=user,dc=local,dc=com'),
-            'password' => env('LDAP_PASSWORD', 'secret'),
-            'port' => env('LDAP_PORT', 389),
-            'base_dn' => env('LDAP_BASE_DN', 'dc=local,dc=com'),
-            'timeout' => env('LDAP_TIMEOUT', 5),
-            'use_ssl' => env('LDAP_SSL', false),
-            'use_tls' => env('LDAP_TLS', false),
+            'hosts' => [env('LDAP_DEFAULT_HOSTS', env('LDAP_HOST', '127.0.0.1'))],
+            'username' => env('LDAP_DEFAULT_USERNAME', env('LDAP_USERNAME', 'cn=user,dc=local,dc=com')),
+            'password' => env('LDAP_DEFAULT_PASSWORD', env('LDAP_PASSWORD', 'secret')),
+            'port' => (int) env('LDAP_DEFAULT_PORT', env('LDAP_PORT', 389)),
+            'base_dn' => env('LDAP_DEFAULT_BASE_DN', env('LDAP_BASE_DN', 'dc=local,dc=com')),
+            'timeout' => (int) env('LDAP_DEFAULT_TIMEOUT', env('LDAP_TIMEOUT', 5)),
+            'use_ssl' => (bool) env('LDAP_DEFAULT_SSL', env('LDAP_SSL', false)),
+            'use_tls' => (bool) env('LDAP_DEFAULT_TLS', env('LDAP_TLS', false)),
             'use_sasl' => env('LDAP_SASL', false),
             'sasl_options' => [
                 // 'mech' => 'GSSAPI',

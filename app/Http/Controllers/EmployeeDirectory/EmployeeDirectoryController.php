@@ -10,6 +10,10 @@ use Throwable;
 
 class EmployeeDirectoryController extends Controller
 {
+    public function __construct(
+        private readonly LDAPNavigator $ldapNavigator,
+    ) {}
+
     public function search(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -17,23 +21,22 @@ class EmployeeDirectoryController extends Controller
             'with_photo' => ['sometimes', 'boolean'],
         ]);
 
-        $withPhoto = $request->boolean('with_photo', true);
-        $searchList = $this->parseSearchGroups($validated['q']);
+        $withPhoto = $request->boolean('with_photo', false);
+        $searchList = $this->ldapNavigator->parseSearchGroups($validated['q']);
 
         if ($searchList === []) {
             return response()->json([
                 'data' => [],
-                'attributes' => (new LDAPNavigator())->getAttributeList(),
+                'attributes' => $this->ldapNavigator->getAttributeList(),
             ]);
         }
 
         try {
-            $navigator = new LDAPNavigator();
-            $entries = $navigator->search($searchList, $withPhoto);
+            $entries = $this->ldapNavigator->search($searchList, $withPhoto);
 
             return response()->json([
                 'data' => $entries,
-                'attributes' => $navigator->getAttributeList(),
+                'attributes' => $this->ldapNavigator->getAttributeList(),
             ]);
         } catch (Throwable $e) {
             report($e);
@@ -42,49 +45,5 @@ class EmployeeDirectoryController extends Controller
                 'message' => 'Не удалось выполнить поиск в справочнике сотрудников.',
             ], 502);
         }
-    }
-
-    /**
-     * "Менеджер + Иркутск 1" → [["Менеджер"], ["Иркутск", "1"]]
-     * "Менеджер Иркутск Гоголя" → [["Менеджер"], ["Иркутск"], ["Гоголя"]]
-     *
-     * Сегменты через + — AND. Слова внутри сегмента должны быть в одном атрибуте.
-     *
-     * @return list<list<string>>
-     */
-    private function parseSearchGroups(string $query): array
-    {
-        $query = trim($query);
-        if ($query === '') {
-            return [];
-        }
-
-        $hasSeparators = (bool) preg_match('/[+;|]/u', $query);
-
-        if ($hasSeparators) {
-            $segments = preg_split('/\s*[+;|]+\s*/u', $query, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        } else {
-            $segments = preg_split('/\s+/u', $query, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        }
-
-        $groups = [];
-        foreach ($segments as $segment) {
-            $segment = trim($segment);
-            if ($segment === '') {
-                continue;
-            }
-
-            if ($hasSeparators) {
-                $words = preg_split('/\s+/u', $segment, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-                $words = array_values(array_filter($words, static fn (string $word): bool => $word !== ''));
-                if ($words !== []) {
-                    $groups[] = $words;
-                }
-            } else {
-                $groups[] = [$segment];
-            }
-        }
-
-        return $groups;
     }
 }

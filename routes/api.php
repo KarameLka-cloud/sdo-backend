@@ -41,7 +41,7 @@ Route::group(['prefix' => 'learning-items', 'middleware' => 'auth:sanctum'], fun
     Route::delete('{id}', [LearningItemController::class, 'destroy'])->middleware('role:full_access');
 });
 
-Route::group(['prefix' => 'employee-directory', 'middleware' => 'auth:sanctum'], function () {
+Route::group(['prefix' => 'employees', 'middleware' => 'auth:sanctum'], function () {
     Route::get('search', [EmployeeDirectoryController::class, 'search']);
 });
 

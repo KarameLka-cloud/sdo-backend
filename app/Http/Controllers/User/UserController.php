@@ -30,20 +30,16 @@ class UserController extends Controller
     }
 
     /**
-     * Возвращает пользователей по роли.
-     * Поддерживает поиск как по техническому имени роли, так и по отображаемому.
+     * Возвращает пользователей по техническому имени роли (enum value).
      */
     private function usersByRole(UserRole $role)
     {
         $roleName = $role->value;
-        $displayName = $role->label();
 
         return User::query()
             ->with('roles')
-            ->whereHas('roles', function ($query) use ($roleName, $displayName): void {
-                $query->where('name', $roleName)
-                    ->orWhereRaw('LOWER(name) = ?', [strtolower($roleName)])
-                    ->orWhere('display_name', $displayName);
+            ->whereHas('roles', function ($query) use ($roleName): void {
+                $query->where('name', $roleName);
             })
             ->get();
     }

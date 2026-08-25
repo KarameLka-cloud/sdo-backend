@@ -68,19 +68,15 @@ class User extends Authenticatable implements LdapAuthenticatable
 
     public function getRoleAttribute()
     {
-        if ($this->relationLoaded('roles')) {
-            return $this->roles->first()?->name;
-        }
+        $this->loadMissing('roles');
 
-        return $this->roles()->pluck('name')->first();
+        return $this->roles->first()?->name;
     }
 
     public function getRoleNameAttribute()
     {
-        if ($this->relationLoaded('roles')) {
-            return $this->roles->first()?->display_name;
-        }
+        $this->loadMissing('roles');
 
-        return $this->roles()->pluck('display_name')->first();
+        return $this->roles->first()?->display_name;
     }
 }
