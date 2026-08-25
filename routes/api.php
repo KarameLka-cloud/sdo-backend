@@ -4,6 +4,7 @@ use App\Http\Controllers\User\DepartmentController;
 use App\Http\Controllers\User\PositionController;
 use App\Http\Controllers\Mentorship\AdaptationPlanController;
 use App\Http\Controllers\Mentorship\AdaptationPlanTemplateController;
+use App\Http\Controllers\EmployeeDirectory\EmployeeDirectoryController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,10 @@ Route::group(['prefix' => 'learning-items', 'middleware' => 'auth:sanctum'], fun
     Route::post('/', [LearningItemController::class, 'store'])->middleware('role:full_access');
     Route::match(['put', 'patch'], '{id}', [LearningItemController::class, 'update'])->middleware('role:full_access');
     Route::delete('{id}', [LearningItemController::class, 'destroy'])->middleware('role:full_access');
+});
+
+Route::group(['prefix' => 'employee-directory', 'middleware' => 'auth:sanctum'], function () {
+    Route::get('search', [EmployeeDirectoryController::class, 'search']);
 });
 
 Route::group(['prefix' => 'mentorship', 'middleware' => 'auth:sanctum'], function () {
