@@ -4,16 +4,16 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\User\Position;
+use Illuminate\Http\JsonResponse;
 
 class PositionController extends Controller
 {
-    public function index(): \Illuminate\Http\JsonResponse
+    public function index(): JsonResponse
     {
-        $positions = Position::all();
-        return response()->json($positions);
+        return response()->json(Position::query()->orderBy('name')->get());
     }
 
-    public function show(Position $position): \Illuminate\Http\JsonResponse
+    public function show(Position $position): JsonResponse
     {
         return response()->json($position);
     }

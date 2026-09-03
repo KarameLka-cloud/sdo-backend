@@ -10,11 +10,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class LearningItem extends Model
 {
     public const CATEGORY_EDUCATION = 'education';
+
     public const CATEGORY_EDO = 'edo';
 
     public const TYPE_EVENT = 'event';
+
     public const TYPE_COURSE = 'course';
+
     public const TYPE_WEBINAR = 'webinar';
+
     public const TYPE_TEST = 'test';
 
     public const CATEGORIES = [

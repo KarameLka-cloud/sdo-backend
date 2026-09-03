@@ -2,10 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\ResponsibleRole;
+use App\Models\Mentorship\AdaptationPlanTemplate;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class AdaptationPlanTemplateRequest extends FormRequest
 {
+    /** Authorization is enforced by the `role:full_access` route middleware. */
     public function authorize(): bool
     {
         return true;
@@ -15,7 +19,7 @@ class AdaptationPlanTemplateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'work_schedule' => ['required', 'string', 'in:5/2,2/2'],
+            'work_schedule' => ['required', 'string', Rule::in(AdaptationPlanTemplate::WORK_SCHEDULES)],
             'shifts' => ['required', 'array', 'min:1'],
             'shifts.*' => ['required', 'integer', 'min:1', 'max:12', 'distinct'],
             'task_blueprint' => ['nullable', 'array'],
@@ -23,7 +27,7 @@ class AdaptationPlanTemplateRequest extends FormRequest
             'task_blueprint.*.responsible_role' => [
                 'nullable',
                 'string',
-                'in:Руководитель отдела,Наставник,Сотрудник УПиПК,Стажер',
+                Rule::in(ResponsibleRole::values()),
             ],
             'task_blueprint.*.day_from' => ['nullable', 'integer', 'min:1', 'max:365'],
             'task_blueprint.*.day_to' => ['nullable', 'integer', 'min:1', 'max:365'],

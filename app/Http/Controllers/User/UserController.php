@@ -3,44 +3,41 @@
 namespace App\Http\Controllers\User;
 
 use App\Enums\UserRole;
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User\User;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json($request->user()?->loadMissing('roles'));
+    }
+
     public function index(): JsonResponse
     {
-        $users = User::query()->with('roles')->get();
-        return response()->json($users);
+        return response()->json(
+            User::query()->with('roles')->orderBy('name')->get()->makeVisible('login')
+        );
     }
 
     public function mentors(): JsonResponse
     {
-        $mentors = $this->usersByRole(UserRole::MENTOR);
-
-        return response()->json($mentors);
+        return response()->json($this->usersByRole(UserRole::MENTOR));
     }
 
     public function departmentHeads(): JsonResponse
     {
-        $departmentHeads = $this->usersByRole(UserRole::DEPARTMENT_HEAD);
-
-        return response()->json($departmentHeads);
+        return response()->json($this->usersByRole(UserRole::DEPARTMENT_HEAD));
     }
 
-    /**
-     * Возвращает пользователей по техническому имени роли (enum value).
-     */
+    /** Users carrying the given role, by the role's technical name. */
     private function usersByRole(UserRole $role)
     {
-        $roleName = $role->value;
-
         return User::query()
             ->with('roles')
-            ->whereHas('roles', function ($query) use ($roleName): void {
-                $query->where('name', $roleName);
-            })
+            ->whereHas('roles', fn ($query) => $query->where('name', $role->value))
             ->get();
     }
 }

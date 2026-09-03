@@ -28,7 +28,7 @@ enum UserRole: string
      */
     public static function toArray(): array
     {
-        return array_map(fn($role) => [
+        return array_map(fn ($role) => [
             'name' => $role->value,
             'label' => $role->label(),
         ], self::cases());

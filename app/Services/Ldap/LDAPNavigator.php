@@ -2,20 +2,19 @@
 
 namespace App\Services\Ldap;
 
+use LdapRecord\Container;
+use LdapRecord\LdapInterface;
+use RuntimeException;
+
+/**
+ * Directory search on top of the shared LdapRecord connection.
+ *
+ * Only the filter building and result shaping live here; connecting,
+ * binding and host failover are delegated to LdapRecord so the directory
+ * and LDAP authentication share one configuration.
+ */
 class LDAPNavigator
 {
-    private $server;
-
-    private $port;
-
-    private $user;
-
-    private $password;
-
-    private $dn;
-
-    private $ldapConnection;
-
     private array $attributeList = [
         'cn' => 'Имя:',
         'description' => 'Должность:',
@@ -35,17 +34,6 @@ class LDAPNavigator
 
     /** @var array<string, string>|null */
     private static ?array $enToRuMap = null;
-
-    public function __construct()
-    {
-        $connection = config('ldap.connections.default');
-
-        $this->server = $connection['hosts'][0] ?? '127.0.0.1';
-        $this->port = $connection['port'] ?? 389;
-        $this->user = $connection['username'] ?? '';
-        $this->password = $connection['password'] ?? '';
-        $this->dn = $connection['base_dn'] ?? '';
-    }
 
     /**
      * "Менеджер + Иркутск 1" → [["Менеджер"], ["Иркутск", "1"]]
@@ -107,14 +95,14 @@ class LDAPNavigator
         $letters = preg_split('//u', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
         return implode('', array_map(
-            static fn(string $letter): string => $map[$letter] ?? $letter,
+            static fn (string $letter): string => $map[$letter] ?? $letter,
             $letters
         ));
     }
 
     private function testEnglishKeyboardLayout(string $search): bool
     {
-        $pattern = '/^[' . preg_quote(self::ENGLISH_KEYBOARD, '/') . ']*$/';
+        $pattern = '/^['.preg_quote(self::ENGLISH_KEYBOARD, '/').']*$/';
 
         return (bool) preg_match($pattern, $search);
     }
@@ -166,7 +154,7 @@ class LDAPNavigator
      */
     private function createGroupCondition(array $words): string
     {
-        $words = array_values(array_filter($words, static fn($word) => $word !== ''));
+        $words = array_values(array_filter($words, static fn ($word) => $word !== ''));
         if ($words === []) {
             return '';
         }
@@ -176,6 +164,7 @@ class LDAPNavigator
         foreach ($this->searchAttributeNames() as $attribute) {
             if (count($words) === 1) {
                 $attributeFilters[] = $this->createCondition($attribute, $words[0]);
+
                 continue;
             }
 
@@ -186,12 +175,12 @@ class LDAPNavigator
             }
 
             $attributeFilters[] = '(|'
-                . $this->createCondition($attribute, $phrase)
-                . '(&' . implode('', $andParts) . ')'
-                . ')';
+                .$this->createCondition($attribute, $phrase)
+                .'(&'.implode('', $andParts).')'
+                .')';
         }
 
-        return '(|' . implode('', $attributeFilters) . ')';
+        return '(|'.implode('', $attributeFilters).')';
     }
 
     /**
@@ -212,12 +201,12 @@ class LDAPNavigator
         }
 
         $value = '(&(objectcategory=person)'
-            . '(|(objectclass=user)(objectclass=contact))'
-            . '(!(userAccountControl:1.2.840.113556.1.4.803:=2))'
-            . '(!(samaccountname=adm.*))'
-            . implode('', $searchStringList)
-            . '(|(telephonenumber=*)(mail=*))'
-            . ')';
+            .'(|(objectclass=user)(objectclass=contact))'
+            .'(!(userAccountControl:1.2.840.113556.1.4.803:=2))'
+            .'(!(samaccountname=adm.*))'
+            .implode('', $searchStringList)
+            .'(|(telephonenumber=*)(mail=*))'
+            .')';
 
         $attributes = array_keys($this->attributeList);
 
@@ -225,13 +214,15 @@ class LDAPNavigator
             $attributes[] = 'thumbnailphoto';
         }
 
-        $searchResult = @ldap_search($this->getLdapConnection(), $this->dn, $value, $attributes);
+        $ldap = $this->connection();
 
-        if (!$searchResult) {
-            throw new \Exception(ldap_error($this->getLdapConnection()));
+        $searchResult = $ldap->search($this->baseDn(), $value, $attributes);
+
+        if (! $searchResult) {
+            throw new RuntimeException($ldap->getLastError() ?? 'LDAP search failed.');
         }
 
-        $entries = ldap_get_entries($this->getLdapConnection(), $searchResult);
+        $entries = $ldap->getEntries($searchResult);
 
         unset($entries['count']);
 
@@ -247,14 +238,14 @@ class LDAPNavigator
         $formatted = [];
 
         foreach ($entries as $entry) {
-            if (!is_array($entry)) {
+            if (! is_array($entry)) {
                 continue;
             }
 
             $item = [];
 
             foreach (array_keys($this->attributeList) as $attribute) {
-                if (!isset($entry[$attribute][0])) {
+                if (! isset($entry[$attribute][0])) {
                     continue;
                 }
                 $item[$attribute] = $this->toUtf8String($entry[$attribute][0]);
@@ -274,7 +265,7 @@ class LDAPNavigator
 
     private function toUtf8String(mixed $value): string
     {
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return (string) $value;
         }
 
@@ -337,37 +328,24 @@ class LDAPNavigator
     }
 
     /**
-     * @throws \Exception
+     * Bound connection configured by `config/ldap.php`, shared with LDAP auth.
      */
-    private function connect(): void
+    private function connection(): LdapInterface
     {
-        $this->ldapConnection = ldap_connect($this->server, (int) $this->port);
-        ldap_set_option($this->ldapConnection, LDAP_OPT_PROTOCOL_VERSION, 3);
-        ldap_set_option($this->ldapConnection, LDAP_OPT_REFERRALS, 0);
+        $connection = Container::getConnection('default');
 
-        if (!@ldap_bind($this->ldapConnection, $this->user, $this->password)) {
-            throw new \Exception(ldap_error($this->ldapConnection));
+        if (! $connection->isConnected()) {
+            $connection->connect();
         }
+
+        return $connection->getLdapConnection();
     }
 
-    /**
-     * @throws \Exception
-     */
-    private function getLdapConnection()
+    private function baseDn(): string
     {
-        if ($this->ldapConnection === null) {
-            $this->connect();
-        }
-
-        return $this->ldapConnection;
-    }
-
-    public function __destruct()
-    {
-        if ($this->ldapConnection) {
-            ldap_close($this->ldapConnection);
-            $this->ldapConnection = null;
-        }
+        return (string) Container::getConnection('default')
+            ->getConfiguration()
+            ->get('base_dn');
     }
 
     public function getAttributeList(): array

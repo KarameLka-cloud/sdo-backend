@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AdaptationPlanTemplate extends Model
 {
+    /** Rotation patterns a template can be built for. */
+    public const WORK_SCHEDULES = ['5/2', '2/2'];
+
     protected $fillable = [
         'name',
         'work_schedule',

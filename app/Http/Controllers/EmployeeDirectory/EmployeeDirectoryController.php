@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\EmployeeDirectory;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EmployeeSearchRequest;
 use App\Services\Ldap\LDAPNavigator;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Throwable;
 
 class EmployeeDirectoryController extends Controller
@@ -14,30 +14,18 @@ class EmployeeDirectoryController extends Controller
         private readonly LDAPNavigator $ldapNavigator,
     ) {}
 
-    public function search(Request $request): JsonResponse
+    public function search(EmployeeSearchRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'q' => ['required', 'string', 'min:2', 'max:200'],
-            'with_photo' => ['sometimes', 'boolean'],
-        ]);
-
-        $withPhoto = $request->boolean('with_photo', false);
-        $searchList = $this->ldapNavigator->parseSearchGroups($validated['q']);
+        $searchList = $this->ldapNavigator->parseSearchGroups($request->validated('q'));
 
         if ($searchList === []) {
-            return response()->json([
-                'data' => [],
-                'attributes' => $this->ldapNavigator->getAttributeList(),
-            ]);
+            return $this->respond([]);
         }
 
         try {
-            $entries = $this->ldapNavigator->search($searchList, $withPhoto);
-
-            return response()->json([
-                'data' => $entries,
-                'attributes' => $this->ldapNavigator->getAttributeList(),
-            ]);
+            return $this->respond(
+                $this->ldapNavigator->search($searchList, $request->boolean('with_photo'))
+            );
         } catch (Throwable $e) {
             report($e);
 
@@ -45,5 +33,13 @@ class EmployeeDirectoryController extends Controller
                 'message' => 'Не удалось выполнить поиск в справочнике сотрудников.',
             ], 502);
         }
+    }
+
+    private function respond(array $entries): JsonResponse
+    {
+        return response()->json([
+            'data' => $entries,
+            'attributes' => $this->ldapNavigator->getAttributeList(),
+        ]);
     }
 }

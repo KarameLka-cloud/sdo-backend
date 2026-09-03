@@ -4,27 +4,24 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('adaptation_plans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->date('start_date');
             $table->string('work_schedule');
             $table->unsignedTinyInteger('shift');
-            $table->foreignId('mentor')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('department_head')->constrained('users')->cascadeOnDelete();
+            // Removing the intern removes the plan, but removing a mentor or a
+            // head must not silently delete someone else's plan: reassign first.
+            $table->foreignId('mentor')->constrained('users')->restrictOnDelete();
+            $table->foreignId('department_head')->constrained('users')->restrictOnDelete();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('adaptation_plans');

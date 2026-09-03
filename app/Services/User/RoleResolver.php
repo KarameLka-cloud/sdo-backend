@@ -18,7 +18,7 @@ class RoleResolver
 
     public function resolve(?string $role): ?UserRole
     {
-        if (!$role) {
+        if (! $role) {
             return null;
         }
 

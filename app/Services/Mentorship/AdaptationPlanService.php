@@ -9,12 +9,13 @@ use App\Models\Mentorship\AdaptationPlanTask;
 use App\Models\Mentorship\AdaptationPlanTemplate;
 use App\Models\User\User;
 use App\Services\User\RoleResolver;
-use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AdaptationPlanService
 {
+    /** Relations needed to render a plan in a list. */
     public const PLAN_LIST_RELATIONS = [
         'user.roles',
         'mentorUser.roles',
@@ -22,13 +23,8 @@ class AdaptationPlanService
         'template',
     ];
 
-    public const PLAN_RELATIONS = [
-        'user.roles',
-        'mentorUser.roles',
-        'departmentHeadUser.roles',
-        'template',
-        'days.tasks',
-    ];
+    /** List relations plus the full day/task tree for detail views. */
+    public const PLAN_RELATIONS = [...self::PLAN_LIST_RELATIONS, 'days.tasks'];
 
     public function __construct(
         private readonly AdaptationPlanStructureGenerator $structureGenerator,
@@ -52,14 +48,12 @@ class AdaptationPlanService
 
                 return $plan;
             });
-        } catch (QueryException $exception) {
-            if ((string) $exception->getCode() === '23000') {
-                throw ValidationException::withMessages([
-                    'user_id' => ['План адаптации для этого пользователя уже создан.'],
-                ]);
-            }
-
-            throw $exception;
+        } catch (UniqueConstraintViolationException) {
+            // The request already checks this; here it means two plans for the
+            // same intern were created at the same moment.
+            throw ValidationException::withMessages([
+                'user_id' => ['План адаптации для этого пользователя уже создан.'],
+            ]);
         }
 
         return $plan->fresh(self::PLAN_RELATIONS);
@@ -110,6 +104,14 @@ class AdaptationPlanService
         return $plan->fresh(self::PLAN_RELATIONS);
     }
 
+    public function delete(AdaptationPlan $plan): void
+    {
+        DB::transaction(function () use ($plan) {
+            $this->structureGenerator->deleteStructure($plan);
+            $plan->delete();
+        });
+    }
+
     public function updateTaskStatus(AdaptationPlanTask $task, string $status): AdaptationPlanTask
     {
         $task->update(['status' => $status]);
@@ -117,6 +119,10 @@ class AdaptationPlanService
         return $task->fresh();
     }
 
+    /**
+     * Applies a manager edit to a day. `intern_comment` is intentionally not
+     * writable here: only the intern may change it, via updateInternComment().
+     */
     public function updateDay(AdaptationPlanDay $day, array $validated): AdaptationPlanDay
     {
         $day->update([
@@ -124,7 +130,6 @@ class AdaptationPlanService
             'date_to' => $validated['date_to'] ?? null,
             'completion' => $validated['completion'],
             'employee_comment' => $validated['employee_comment'] ?? null,
-            'intern_comment' => $validated['intern_comment'] ?? null,
             'mentor_comment' => $validated['mentor_comment'] ?? null,
             'department_head_comment' => $validated['department_head_comment'] ?? null,
         ]);
@@ -143,7 +148,7 @@ class AdaptationPlanService
     {
         return AdaptationPlanDay::query()
             ->where('id', $dayId)
-            ->whereHas('plan', fn($query) => $query->where('user_id', $userId))
+            ->whereHas('plan', fn ($query) => $query->where('user_id', $userId))
             ->firstOrFail();
     }
 
@@ -152,7 +157,7 @@ class AdaptationPlanService
         return AdaptationPlanTask::query()
             ->where('id', $taskId)
             ->where('adaptation_plan_day_id', $dayId)
-            ->whereHas('day.plan', fn($query) => $query->where('user_id', $userId))
+            ->whereHas('day.plan', fn ($query) => $query->where('user_id', $userId))
             ->firstOrFail();
     }
 
@@ -161,7 +166,7 @@ class AdaptationPlanService
         return AdaptationPlanTask::query()
             ->where('id', $taskId)
             ->where('adaptation_plan_day_id', $dayId)
-            ->whereHas('day', fn($query) => $query->where('adaptation_plan_id', $plan->id))
+            ->whereHas('day', fn ($query) => $query->where('adaptation_plan_id', $plan->id))
             ->firstOrFail();
     }
 
@@ -175,7 +180,7 @@ class AdaptationPlanService
 
     public function assertShiftAllowed(AdaptationPlanTemplate $template, int $shift): void
     {
-        if (!in_array($shift, $template->shifts ?? [], true)) {
+        if (! in_array($shift, $template->shifts ?? [], true)) {
             throw ValidationException::withMessages([
                 'shift' => ['Выбранная смена недоступна для указанного шаблона.'],
             ]);

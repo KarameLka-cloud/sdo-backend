@@ -9,6 +9,9 @@ enum Permission: string
 {
     case FULL_ACCESS = 'full_access';
 
+    /** Просмотр списка сотрудников: нужен для назначения стажёра, наставника и руководителя. */
+    case VIEW_USERS = 'view_users';
+
     /**
      * Получить права для конкретной роли
      */
@@ -17,8 +20,11 @@ enum Permission: string
         return match ($role) {
             UserRole::ADMIN => [
                 self::FULL_ACCESS,
+                self::VIEW_USERS,
             ],
-            UserRole::MENTOR, UserRole::DEPARTMENT_HEAD => [],
+            UserRole::MENTOR, UserRole::DEPARTMENT_HEAD => [
+                self::VIEW_USERS,
+            ],
         };
     }
 

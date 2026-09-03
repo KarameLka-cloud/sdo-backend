@@ -3,13 +3,21 @@
 namespace App\Http\Requests;
 
 use App\Models\LearningItem;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class LearningItemRequest extends FormRequest
 {
+    /** Which learning types actually use each optional field. */
+    private const FIELD_APPLIES_TO = [
+        'department_id' => [LearningItem::TYPE_EVENT, LearningItem::TYPE_COURSE],
+        'note_department' => [LearningItem::TYPE_EVENT, LearningItem::TYPE_COURSE],
+        'position_id' => [LearningItem::TYPE_TEST],
+        'note_position' => [LearningItem::TYPE_TEST],
+        'time' => [LearningItem::TYPE_EVENT, LearningItem::TYPE_WEBINAR],
+    ];
+
+    /** Authorization is enforced by the `role:full_access` route middleware. */
     public function authorize(): bool
     {
         return true;
@@ -17,9 +25,18 @@ class LearningItemRequest extends FormRequest
 
     public function rules(): array
     {
-        $type = $this->input('type');
+        $department = ['required', 'numeric', 'exists:departments,id'];
+        $position = ['required', 'numeric', 'exists:positions,id'];
+        $requiredLink = ['required', 'string'];
 
-        $rules = [
+        $typeRules = match ($this->input('type')) {
+            LearningItem::TYPE_EVENT => ['department_id' => $department],
+            LearningItem::TYPE_COURSE => ['department_id' => $department, 'link' => $requiredLink],
+            LearningItem::TYPE_TEST => ['position_id' => $position, 'link' => $requiredLink],
+            default => [],
+        };
+
+        return [
             'category' => ['required', Rule::in(LearningItem::CATEGORIES)],
             'type' => ['required', Rule::in(LearningItem::TYPES)],
             'title' => ['required', 'string'],
@@ -32,28 +49,8 @@ class LearningItemRequest extends FormRequest
             'note_department' => ['nullable', 'string'],
             'position_id' => ['nullable', 'numeric', 'exists:positions,id'],
             'note_position' => ['nullable', 'string'],
+            ...$typeRules,
         ];
-
-        return match ($type) {
-            LearningItem::TYPE_EVENT => array_merge($rules, [
-                'department_id' => ['required', 'numeric', 'exists:departments,id'],
-                'link' => ['nullable', 'string'],
-                'time' => ['nullable', 'date_format:H:i'],
-            ]),
-            LearningItem::TYPE_COURSE => array_merge($rules, [
-                'department_id' => ['required', 'numeric', 'exists:departments,id'],
-                'link' => ['required', 'string'],
-            ]),
-            LearningItem::TYPE_WEBINAR => array_merge($rules, [
-                'link' => ['nullable', 'string'],
-                'time' => ['nullable', 'date_format:H:i'],
-            ]),
-            LearningItem::TYPE_TEST => array_merge($rules, [
-                'position_id' => ['required', 'numeric', 'exists:positions,id'],
-                'link' => ['required', 'string'],
-            ]),
-            default => $rules,
-        };
     }
 
     public function messages(): array
@@ -87,71 +84,36 @@ class LearningItemRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $this->merge($this->normalizeNullableStrings([
-            'description',
-            'link',
-            'note_department',
-            'note_position',
-            'time',
-        ]));
+        $blankToNull = [];
+
+        foreach (['description', 'link', 'note_department', 'note_position', 'time'] as $field) {
+            if ($this->has($field)) {
+                $value = $this->input($field);
+                $blankToNull[$field] = is_string($value) && trim($value) === '' ? null : $value;
+            }
+        }
+
+        $this->merge($blankToNull);
     }
 
+    /**
+     * Clears fields that do not belong to the submitted type, so switching a
+     * type never leaves stale organisational data behind.
+     */
     public function validated($key = null, $default = null)
     {
         $data = parent::validated($key, $default);
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             return $data;
         }
 
         $type = $data['type'] ?? null;
 
-        $data['department_id'] = in_array($type, [
-            LearningItem::TYPE_EVENT,
-            LearningItem::TYPE_COURSE,
-        ], true) ? ($data['department_id'] ?? null) : null;
-
-        $data['note_department'] = in_array($type, [
-            LearningItem::TYPE_EVENT,
-            LearningItem::TYPE_COURSE,
-        ], true) ? ($data['note_department'] ?? null) : null;
-
-        $data['position_id'] = $type === LearningItem::TYPE_TEST
-            ? ($data['position_id'] ?? null)
-            : null;
-
-        $data['note_position'] = $type === LearningItem::TYPE_TEST
-            ? ($data['note_position'] ?? null)
-            : null;
-
-        $data['time'] = in_array($type, [
-            LearningItem::TYPE_EVENT,
-            LearningItem::TYPE_WEBINAR,
-        ], true) ? ($data['time'] ?? null) : null;
-
-        return $data;
-    }
-
-    private function normalizeNullableStrings(array $fields): array
-    {
-        $normalized = [];
-
-        foreach ($fields as $field) {
-            if (!$this->has($field)) {
-                continue;
-            }
-
-            $value = $this->input($field);
-            $normalized[$field] = is_string($value) && trim($value) === '' ? null : $value;
+        foreach (self::FIELD_APPLIES_TO as $field => $types) {
+            $data[$field] = in_array($type, $types, true) ? ($data[$field] ?? null) : null;
         }
 
-        return $normalized;
-    }
-
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new ValidationException($validator, response()->json([
-            'errors' => $validator->errors(),
-        ], 422));
+        return $data;
     }
 }

@@ -22,7 +22,7 @@ class RolePermission
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -30,7 +30,7 @@ class RolePermission
 
         $userRole = $this->roleResolver->resolve($user->role);
 
-        if (!$userRole) {
+        if (! $userRole) {
             return response()->json(['message' => 'Role not assigned'], 403);
         }
 
@@ -43,7 +43,7 @@ class RolePermission
             ], 500);
         }
 
-        if (!Permission::hasPermission($userRole, $requiredPermission)) {
+        if (! Permission::hasPermission($userRole, $requiredPermission)) {
             return response()->json([
                 'message' => 'Forbidden. You do not have required permission.',
             ], 403);

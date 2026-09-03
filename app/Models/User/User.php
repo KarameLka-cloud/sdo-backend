@@ -2,19 +2,20 @@
 
 namespace App\Models\User;
 
-use App\Models\Mentorship\AdaptationPlan;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 use LdapRecord\Laravel\Auth\AuthenticatesWithLdap;
+use LdapRecord\Laravel\Auth\LdapAuthenticatable;
 
 class User extends Authenticatable implements LdapAuthenticatable
 {
-    use Notifiable, HasApiTokens, AuthenticatesWithLdap;
+    use AuthenticatesWithLdap, HasApiTokens, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
+     * Attributes populated from LDAP on sign-in. `password` is deliberately
+     * excluded: credentials live in the directory, not in this table.
      *
      * @var list<string>
      */
@@ -24,11 +25,14 @@ class User extends Authenticatable implements LdapAuthenticatable
         'department',
         'company',
         'login',
-        'password',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
+     *
+     * `login` is hidden by default so it does not leak through nested payloads
+     * (an intern loading their plan also loads mentor and head records).
+     * The staff roster re-exposes it with `makeVisible`.
      *
      * @var list<string>
      */
@@ -37,6 +41,7 @@ class User extends Authenticatable implements LdapAuthenticatable
         'updated_at',
         'guid',
         'domain',
+        'login',
         'password',
         'remember_token',
         'roles',
@@ -56,14 +61,9 @@ class User extends Authenticatable implements LdapAuthenticatable
         ];
     }
 
-    public function roles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
-    }
-
-    public function adaptationPlans(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(AdaptationPlan::class);
     }
 
     public function getRoleAttribute()

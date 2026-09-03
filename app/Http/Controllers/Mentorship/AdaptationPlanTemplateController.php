@@ -19,6 +19,7 @@ class AdaptationPlanTemplateController extends Controller
     public function store(AdaptationPlanTemplateRequest $request): JsonResponse
     {
         $template = AdaptationPlanTemplate::create($request->validated());
+
         return response()->json($template, 201);
     }
 
@@ -32,12 +33,24 @@ class AdaptationPlanTemplateController extends Controller
         AdaptationPlanTemplate $adaptationPlanTemplate
     ): JsonResponse {
         $adaptationPlanTemplate->update($request->validated());
+
         return response()->json($adaptationPlanTemplate->fresh());
     }
 
     public function destroy(AdaptationPlanTemplate $adaptationPlanTemplate): JsonResponse
     {
+        // Deleting would detach the template from existing plans, leaving them
+        // without a work schedule, so refuse while any plan still uses it.
+        $plansInUse = $adaptationPlanTemplate->plans()->count();
+
+        if ($plansInUse > 0) {
+            return response()->json([
+                'message' => "Шаблон используется в планах адаптации ({$plansInUse}). Сначала измените или удалите их.",
+            ], 409);
+        }
+
         $adaptationPlanTemplate->delete();
-        return response()->json(['message' => 'Adaptation plan template deleted']);
+
+        return response()->json(['message' => 'Шаблон адаптации удалён']);
     }
 }

@@ -2,33 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LearningItemIndexRequest;
 use App\Http\Requests\LearningItemRequest;
 use App\Models\LearningItem;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class LearningItemController extends Controller
 {
-    private const RELATION_LOAD = ['departmentRelation', 'positionRelation'];
+    private const RELATIONS = ['departmentRelation', 'positionRelation'];
 
-    public function index(Request $request): JsonResponse
+    /** Types where the start time is meaningful and worth ordering by. */
+    private const TIMED_TYPES = [LearningItem::TYPE_EVENT, LearningItem::TYPE_WEBINAR];
+
+    public function index(LearningItemIndexRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'category' => ['required', Rule::in(LearningItem::CATEGORIES)],
-            'type' => ['required', Rule::in(LearningItem::TYPES)],
-        ]);
+        ['category' => $category, 'type' => $type] = $request->validated();
 
         $items = LearningItem::query()
-            ->with(self::RELATION_LOAD)
-            ->where('category', $validated['category'])
-            ->where('type', $validated['type'])
-            ->orderBy('date', 'desc')
+            ->with(self::RELATIONS)
+            ->where('category', $category)
+            ->where('type', $type)
+            ->orderByDesc('date')
             ->when(
-                in_array($validated['type'], [
-                    LearningItem::TYPE_EVENT,
-                    LearningItem::TYPE_WEBINAR,
-                ], true),
+                in_array($type, self::TIMED_TYPES, true),
                 fn ($query) => $query->orderBy('time')
             )
             ->get();
@@ -39,31 +35,25 @@ class LearningItemController extends Controller
     public function store(LearningItemRequest $request): JsonResponse
     {
         $item = LearningItem::create($request->validated());
-        $item->load(self::RELATION_LOAD);
 
-        return response()->json($item);
+        return response()->json($item->load(self::RELATIONS), 201);
     }
 
-    public function show($id): JsonResponse
+    public function show(LearningItem $learningItem): JsonResponse
     {
-        $item = LearningItem::with(self::RELATION_LOAD)->findOrFail($id);
-
-        return response()->json($item);
+        return response()->json($learningItem->load(self::RELATIONS));
     }
 
-    public function update(LearningItemRequest $request, $id): JsonResponse
+    public function update(LearningItemRequest $request, LearningItem $learningItem): JsonResponse
     {
-        $item = LearningItem::findOrFail($id);
-        $item->update($request->validated());
-        $item->load(self::RELATION_LOAD);
+        $learningItem->update($request->validated());
 
-        return response()->json($item);
+        return response()->json($learningItem->load(self::RELATIONS));
     }
 
-    public function destroy($id): JsonResponse
+    public function destroy(LearningItem $learningItem): JsonResponse
     {
-        $item = LearningItem::findOrFail($id);
-        $item->delete();
+        $learningItem->delete();
 
         return response()->json(['message' => 'Learning item deleted']);
     }

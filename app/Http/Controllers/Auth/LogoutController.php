@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LogoutController extends Controller
@@ -12,7 +12,7 @@ class LogoutController extends Controller
     {
         $token = $request->user()?->currentAccessToken();
 
-        if (!$token) {
+        if (! $token) {
             return response()->json(['message' => 'Token is missing or expired'], 401);
         }
 

@@ -2,92 +2,55 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleRequest;
-use App\Enums\UserRole;
 use App\Models\User\Role;
 use App\Models\User\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
-    /**
-     * Получить список всех доступных ролей
-     */
+    /** All roles that can be assigned. */
     public function index(): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'data' => UserRole::toArray(),
-        ]);
+        return response()->json(UserRole::toArray());
     }
 
-    /**
-     * Назначить роль пользователю (заменяет все существующие роли)
-     */
+    /** Assigns a role, replacing any the user already has. */
     public function assignRole(RoleRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-        return $this->assignRoleByName((int) $validated['user_id'], (string) $validated['role']);
+        [$user, $role] = $this->resolveUserAndRole($request);
+
+        // One active role per user is an application-level invariant.
+        $user->roles()->sync([$role->id]);
+
+        return response()->json(['message' => 'Role assigned successfully']);
     }
 
-    /**
-     * Отозвать роль у пользователя
-     */
     public function revokeRole(RoleRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-        return $this->revokeRoleByName((int) $validated['user_id'], (string) $validated['role']);
-    }
+        [$user, $role] = $this->resolveUserAndRole($request);
 
-    private function assignRoleByName(int $userId, string $roleName): JsonResponse
-    {
-        $user = User::findOrFail($userId);
-        $role = Role::where('name', $roleName)->first();
-
-        if (!$role) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Role not found in database'
-            ], 404);
-        }
-
-        DB::transaction(function () use ($user, $role): void {
-            // Держим инвариант: одна активная роль на пользователя.
-            $user->roles()->sync([$role->id]);
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Role assigned successfully',
-        ]);
-    }
-
-    private function revokeRoleByName(int $userId, string $roleName): JsonResponse
-    {
-        $user = User::findOrFail($userId);
-        $role = Role::where('name', $roleName)->first();
-
-        if (!$role) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Role not found in database'
-            ], 404);
-        }
-
-        if (!$user->roles()->where('name', $role->name)->exists()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User does not have this role'
-            ], 400);
+        if (! $user->roles()->whereKey($role->id)->exists()) {
+            return response()->json(['message' => 'User does not have this role'], 400);
         }
 
         $user->roles()->detach($role->id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Role revoked successfully',
-        ]);
+        return response()->json(['message' => 'Role revoked successfully']);
+    }
+
+    /**
+     * @return array{0: User, 1: Role}
+     */
+    private function resolveUserAndRole(RoleRequest $request): array
+    {
+        $validated = $request->validated();
+
+        return [
+            User::findOrFail((int) $validated['user_id']),
+            Role::where('name', (string) $validated['role'])->firstOrFail(),
+        ];
     }
 }

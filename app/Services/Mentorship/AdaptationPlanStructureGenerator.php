@@ -2,8 +2,12 @@
 
 namespace App\Services\Mentorship;
 
+use App\Enums\CompletionStatus;
+use App\Enums\ResponsibleRole;
+use App\Enums\TaskStatus;
 use App\Models\Mentorship\AdaptationPlan;
 use App\Models\Mentorship\AdaptationPlanDay;
+use App\Models\Mentorship\AdaptationPlanTask;
 use Carbon\Carbon;
 
 class AdaptationPlanStructureGenerator
@@ -12,12 +16,12 @@ class AdaptationPlanStructureGenerator
     {
         $plan->loadMissing('template');
 
-        if (!$forceRegenerate && $plan->days()->exists()) {
+        if (! $forceRegenerate && $plan->days()->exists()) {
             return;
         }
 
         if ($forceRegenerate) {
-            $plan->days()->delete();
+            $this->deleteStructure($plan);
         }
 
         $blueprint = $this->normalizeBlueprint($plan->template?->task_blueprint);
@@ -50,7 +54,7 @@ class AdaptationPlanStructureGenerator
                     'day_to' => $range['to'],
                     'date_from' => $dateFrom->toDateString(),
                     'date_to' => $dateTo?->toDateString(),
-                    'completion' => 'в процессе',
+                    'completion' => CompletionStatus::IN_PROGRESS->value,
                 ]);
 
                 $day->tasks()->createMany($tasks);
@@ -66,9 +70,25 @@ class AdaptationPlanStructureGenerator
             'day_to' => 1,
             'date_from' => $plan->start_date->toDateString(),
             'date_to' => null,
-            'completion' => 'в процессе',
+            'completion' => CompletionStatus::IN_PROGRESS->value,
         ]);
         $day->tasks()->createMany($this->buildDefaultTasks($plan->shift, 3));
+    }
+
+    /** Drops generated days and tasks. Does not touch the intern user. */
+    public function deleteStructure(AdaptationPlan $plan): void
+    {
+        $dayIds = $plan->days()->pluck('id');
+        if ($dayIds->isEmpty()) {
+            return;
+        }
+
+        AdaptationPlanTask::query()
+            ->whereIn('adaptation_plan_day_id', $dayIds)
+            ->delete();
+        AdaptationPlanDay::query()
+            ->whereIn('id', $dayIds)
+            ->delete();
     }
 
     /**
@@ -79,13 +99,13 @@ class AdaptationPlanStructureGenerator
     {
         $tasksForDay = array_values(array_filter(
             $blueprint,
-            fn(array $item) => $this->isTaskForRange($item, $rangeFrom, $rangeTo)
+            fn (array $item) => $this->isTaskForRange($item, $rangeFrom, $rangeTo)
         ));
 
         return array_map(
-            fn(array $item) => [
+            fn (array $item) => [
                 'description' => $item['description'],
-                'status' => 'не выполнено',
+                'status' => TaskStatus::NOT_DONE->value,
                 'responsible_role' => $item['responsible_role'],
                 'links' => $item['links'],
             ],
@@ -95,14 +115,19 @@ class AdaptationPlanStructureGenerator
 
     private function buildDefaultTasks(int $shift, int $tasksPerDay): array
     {
-        $roles = ['Стажер', 'Наставник', 'Сотрудник УПиПК', 'Руководитель отдела'];
+        $roles = [
+            ResponsibleRole::INTERN,
+            ResponsibleRole::MENTOR,
+            ResponsibleRole::HR,
+            ResponsibleRole::DEPARTMENT_HEAD,
+        ];
+
         $tasks = [];
         for ($index = 1; $index <= $tasksPerDay; $index++) {
-            $role = $roles[($index - 1) % count($roles)];
             $tasks[] = [
                 'description' => "Задача {$index} для смены {$shift}",
-                'status' => 'не выполнено',
-                'responsible_role' => $role,
+                'status' => TaskStatus::NOT_DONE->value,
+                'responsible_role' => $roles[($index - 1) % count($roles)]->value,
                 'links' => [],
             ];
         }
@@ -112,12 +137,12 @@ class AdaptationPlanStructureGenerator
 
     private function normalizeBlueprint(?array $blueprint): array
     {
-        if (!$blueprint) {
+        if (! $blueprint) {
             return [];
         }
 
         return array_values(array_filter(array_map(function ($item) {
-            if (!is_array($item) || empty($item['description'])) {
+            if (! is_array($item) || empty($item['description'])) {
                 return null;
             }
 
@@ -136,7 +161,7 @@ class AdaptationPlanStructureGenerator
                 'day_from' => $dayFrom,
                 'day_to' => $dayTo,
                 'links' => array_values(array_filter(array_map(
-                    fn($link) => is_string($link) ? trim($link) : null,
+                    fn ($link) => is_string($link) ? trim($link) : null,
                     $item['links'] ?? []
                 ))),
             ];
@@ -164,7 +189,7 @@ class AdaptationPlanStructureGenerator
         }
 
         $resolved = array_values($ranges);
-        usort($resolved, fn(array $left, array $right) => [$left['from'], $left['to']] <=> [$right['from'], $right['to']]);
+        usort($resolved, fn (array $left, array $right) => [$left['from'], $left['to']] <=> [$right['from'], $right['to']]);
 
         return $resolved;
     }
@@ -197,11 +222,12 @@ class AdaptationPlanStructureGenerator
     private function isWorkingDayForSchedule(string $schedule, int $dayOffset, Carbon $date): bool
     {
         if ($schedule === '5/2') {
-            return !$date->isWeekend();
+            return ! $date->isWeekend();
         }
 
         if ($schedule === '2/2') {
             $cyclePosition = $dayOffset % 4;
+
             return $cyclePosition < 2;
         }
 
