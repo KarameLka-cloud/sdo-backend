@@ -8,9 +8,11 @@ use Illuminate\Http\JsonResponse;
 
 class PositionController extends Controller
 {
+    use ListsCatalogModels;
+
     public function index(): JsonResponse
     {
-        return response()->json(Position::query()->orderBy('name')->get());
+        return $this->listCatalog(Position::class);
     }
 
     public function show(Position $position): JsonResponse

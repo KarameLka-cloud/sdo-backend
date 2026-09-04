@@ -11,6 +11,12 @@ enum UserRole: string
     case MENTOR = 'MENTOR';
     case DEPARTMENT_HEAD = 'DEPARTMENT_HEAD';
 
+    /** @return list<string> */
+    public static function values(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
     /**
      * Получить отображаемое имя роли
      */

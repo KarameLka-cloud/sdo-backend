@@ -15,11 +15,7 @@ class AdaptationPlanPolicy
 
     public function view(User $user, AdaptationPlan $plan): bool
     {
-        if ($this->manage($user, $plan)) {
-            return true;
-        }
-
-        return (int) $plan->user_id === (int) $user->id;
+        return $plan->isVisibleTo($user, $this->resolveRole($user));
     }
 
     public function create(User $user): bool
@@ -33,15 +29,7 @@ class AdaptationPlanPolicy
 
     public function manage(User $user, AdaptationPlan $plan): bool
     {
-        if ($this->resolveRole($user) === UserRole::ADMIN) {
-            return true;
-        }
-
-        if ((int) $plan->mentor === (int) $user->id) {
-            return true;
-        }
-
-        return (int) $plan->department_head === (int) $user->id;
+        return $plan->isManageableBy($user, $this->resolveRole($user));
     }
 
     public function update(User $user, AdaptationPlan $plan): bool

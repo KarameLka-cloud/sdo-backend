@@ -17,7 +17,7 @@ class RoleRequest extends FormRequest
     {
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'role' => ['required', 'string', Rule::in(array_column(UserRole::cases(), 'value'))],
+            'role' => ['required', 'string', Rule::in(UserRole::values())],
         ];
     }
 

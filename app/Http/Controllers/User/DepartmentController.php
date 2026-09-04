@@ -8,9 +8,11 @@ use Illuminate\Http\JsonResponse;
 
 class DepartmentController extends Controller
 {
+    use ListsCatalogModels;
+
     public function index(): JsonResponse
     {
-        return response()->json(Department::query()->orderBy('name')->get());
+        return $this->listCatalog(Department::class);
     }
 
     public function show(Department $department): JsonResponse

@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
-use App\Enums\UserRole;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\User\RoleController;
 use App\Http\Requests\RoleRequest;
 use App\Models\User\Role;
 use App\Models\User\User;
@@ -14,7 +13,15 @@ class RoleController extends Controller
     /** All roles that can be assigned. */
     public function index(): JsonResponse
     {
-        return response()->json(UserRole::toArray());
+        return response()->json(
+            Role::query()
+                ->orderBy('name')
+                ->get(['name', 'display_name'])
+                ->map(fn (Role $role) => [
+                    'name' => $role->name,
+                    'label' => $role->display_name,
+                ])
+        );
     }
 
     /** Assigns a role, replacing any the user already has. */
@@ -31,8 +38,9 @@ class RoleController extends Controller
     public function revokeRole(RoleRequest $request): JsonResponse
     {
         [$user, $role] = $this->resolveUserAndRole($request);
+        $user->loadMissing('roles');
 
-        if (! $user->roles()->whereKey($role->id)->exists()) {
+        if (! $user->roles->contains('id', $role->id)) {
             return response()->json(['message' => 'User does not have this role'], 400);
         }
 

@@ -106,10 +106,7 @@ class AdaptationPlanService
 
     public function delete(AdaptationPlan $plan): void
     {
-        DB::transaction(function () use ($plan) {
-            $this->structureGenerator->deleteStructure($plan);
-            $plan->delete();
-        });
+        $plan->delete();
     }
 
     public function updateTaskStatus(AdaptationPlanTask $task, string $status): AdaptationPlanTask
@@ -146,35 +143,56 @@ class AdaptationPlanService
 
     public function findOwnedDay(int $dayId, int $userId): AdaptationPlanDay
     {
-        return AdaptationPlanDay::query()
-            ->where('id', $dayId)
-            ->whereHas('plan', fn ($query) => $query->where('user_id', $userId))
-            ->firstOrFail();
+        return $this->findDay($dayId, ownerUserId: $userId);
     }
 
     public function findOwnedTask(int $dayId, int $taskId, int $userId): AdaptationPlanTask
     {
-        return AdaptationPlanTask::query()
-            ->where('id', $taskId)
-            ->where('adaptation_plan_day_id', $dayId)
-            ->whereHas('day.plan', fn ($query) => $query->where('user_id', $userId))
-            ->firstOrFail();
+        return $this->findTask($dayId, $taskId, ownerUserId: $userId);
     }
 
     public function findManagedTask(AdaptationPlan $plan, int $dayId, int $taskId): AdaptationPlanTask
     {
-        return AdaptationPlanTask::query()
-            ->where('id', $taskId)
-            ->where('adaptation_plan_day_id', $dayId)
-            ->whereHas('day', fn ($query) => $query->where('adaptation_plan_id', $plan->id))
-            ->firstOrFail();
+        return $this->findTask($dayId, $taskId, planId: $plan->id);
     }
 
     public function findManagedDay(AdaptationPlan $plan, int $dayId): AdaptationPlanDay
     {
+        return $this->findDay($dayId, planId: $plan->id);
+    }
+
+    private function findDay(
+        int $dayId,
+        ?int $ownerUserId = null,
+        ?int $planId = null,
+    ): AdaptationPlanDay {
         return AdaptationPlanDay::query()
             ->where('id', $dayId)
-            ->where('adaptation_plan_id', $plan->id)
+            ->when($planId !== null, fn ($query) => $query->where('adaptation_plan_id', $planId))
+            ->when($ownerUserId !== null, fn ($query) => $query->whereHas(
+                'plan',
+                fn ($planQuery) => $planQuery->where('user_id', $ownerUserId),
+            ))
+            ->firstOrFail();
+    }
+
+    private function findTask(
+        int $dayId,
+        int $taskId,
+        ?int $ownerUserId = null,
+        ?int $planId = null,
+    ): AdaptationPlanTask {
+        return AdaptationPlanTask::query()
+            ->where('id', $taskId)
+            ->where('adaptation_plan_day_id', $dayId)
+            ->when($planId !== null, fn ($query) => $query->whereHas(
+                'day',
+                fn ($dayQuery) => $dayQuery->where('adaptation_plan_id', $planId),
+            ))
+            ->when($ownerUserId !== null, fn ($query) => $query->whereHas(
+                'day.plan',
+                fn ($planQuery) => $planQuery->where('user_id', $ownerUserId),
+            ))
             ->firstOrFail();
     }
 

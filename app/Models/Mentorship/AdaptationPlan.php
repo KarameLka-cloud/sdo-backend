@@ -74,4 +74,26 @@ class AdaptationPlan extends Model
 
         return $query->where('user_id', $user->id);
     }
+
+    public function isVisibleTo(User $user, ?UserRole $role): bool
+    {
+        if ($this->isManageableBy($user, $role)) {
+            return true;
+        }
+
+        return (int) $this->user_id === (int) $user->id;
+    }
+
+    public function isManageableBy(User $user, ?UserRole $role): bool
+    {
+        if ($role === UserRole::ADMIN) {
+            return true;
+        }
+
+        if ((int) $this->mentor === (int) $user->id) {
+            return true;
+        }
+
+        return (int) $this->department_head === (int) $user->id;
+    }
 }
