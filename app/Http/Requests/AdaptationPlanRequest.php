@@ -28,6 +28,7 @@ class AdaptationPlanRequest extends FormRequest
             'adaptation_plan_template_id' => ['required', 'exists:adaptation_plan_templates,id'],
             'shift' => ['required', 'integer', 'min:1'],
             'mentor' => ['required', 'integer', 'exists:users,id'],
+            'supervisor' => ['required', 'integer', 'exists:users,id'],
             'department_head' => ['required', 'integer', 'exists:users,id'],
         ];
     }

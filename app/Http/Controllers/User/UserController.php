@@ -27,6 +27,11 @@ class UserController extends Controller
         return response()->json($this->usersByRole(UserRole::MENTOR));
     }
 
+    public function supervisors(): JsonResponse
+    {
+        return response()->json($this->usersByRole(UserRole::SUPERVISOR));
+    }
+
     public function departmentHeads(): JsonResponse
     {
         return response()->json($this->usersByRole(UserRole::DEPARTMENT_HEAD));

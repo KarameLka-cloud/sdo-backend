@@ -12,8 +12,12 @@ class RoleResolver
         'администратор' => UserRole::ADMIN,
         'mentor' => UserRole::MENTOR,
         'наставник' => UserRole::MENTOR,
+        'supervisor' => UserRole::SUPERVISOR,
+        'руководитель' => UserRole::SUPERVISOR,
+        'руководитель отделения' => UserRole::SUPERVISOR,
+        'руководитель отдела' => UserRole::SUPERVISOR,
         'department_head' => UserRole::DEPARTMENT_HEAD,
-        'руководитель отдела' => UserRole::DEPARTMENT_HEAD,
+        'начальник отдела' => UserRole::DEPARTMENT_HEAD,
     ];
 
     public function resolve(?string $role): ?UserRole

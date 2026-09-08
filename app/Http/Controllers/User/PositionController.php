@@ -14,9 +14,4 @@ class PositionController extends Controller
     {
         return $this->listCatalog(Position::class);
     }
-
-    public function show(Position $position): JsonResponse
-    {
-        return response()->json($position);
-    }
 }

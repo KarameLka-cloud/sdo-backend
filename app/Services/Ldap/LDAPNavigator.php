@@ -15,6 +15,8 @@ use RuntimeException;
  */
 class LDAPNavigator
 {
+    private const SEARCH_LIMIT = 100;
+
     private array $attributeList = [
         'cn' => 'Имя:',
         'description' => 'Должность:',
@@ -230,7 +232,10 @@ class LDAPNavigator
             return $this->compare($a['cn'][0] ?? '', $b['cn'][0] ?? '');
         });
 
-        return $this->formatEntriesForJson($entries, $withPhoto);
+        return $this->formatEntriesForJson(
+            array_slice($entries, 0, self::SEARCH_LIMIT),
+            $withPhoto,
+        );
     }
 
     private function formatEntriesForJson(array $entries, bool $withPhoto): array

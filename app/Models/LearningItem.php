@@ -76,7 +76,7 @@ class LearningItem extends Model
             return $this->departmentRelation?->name;
         }
 
-        return $this->departmentRelation()->value('name');
+        return null;
     }
 
     public function getPositionAttribute(): ?string
@@ -85,6 +85,6 @@ class LearningItem extends Model
             return $this->positionRelation?->name;
         }
 
-        return $this->positionRelation()->value('name');
+        return null;
     }
 }

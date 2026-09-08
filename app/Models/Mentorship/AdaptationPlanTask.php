@@ -2,6 +2,7 @@
 
 namespace App\Models\Mentorship;
 
+use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,8 +16,14 @@ class AdaptationPlanTask extends Model
         'links',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     protected $casts = [
         'links' => 'array',
+        'status' => TaskStatus::class,
     ];
 
     public function day(): BelongsTo

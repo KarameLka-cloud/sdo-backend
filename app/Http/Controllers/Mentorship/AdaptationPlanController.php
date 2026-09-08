@@ -67,7 +67,7 @@ class AdaptationPlanController extends Controller
         AdaptationPlanUpdateRequest $request,
         AdaptationPlan $adaptationPlan,
     ): JsonResponse {
-        $this->authorize('update', $adaptationPlan);
+        $this->authorize('updateMeta', $adaptationPlan);
 
         return response()->json(
             $this->adaptationPlanService->update($adaptationPlan, $request->validated())
@@ -79,7 +79,7 @@ class AdaptationPlanController extends Controller
         $this->authorize('delete', $adaptationPlan);
         $this->adaptationPlanService->delete($adaptationPlan);
 
-        return response()->json(['message' => 'Adaptation plan deleted']);
+        return response()->json(['message' => 'План адаптации удалён']);
     }
 
     public function updateMyInternComment(
@@ -114,7 +114,11 @@ class AdaptationPlanController extends Controller
         $day = $this->adaptationPlanService->findManagedDay($adaptationPlan, $dayId);
 
         return response()->json(
-            $this->adaptationPlanService->updateDay($day, $request->validated())
+            $this->adaptationPlanService->updateDay(
+                $day,
+                $request->validated(),
+                $request->user(),
+            )
         );
     }
 

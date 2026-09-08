@@ -14,9 +14,4 @@ class DepartmentController extends Controller
     {
         return $this->listCatalog(Department::class);
     }
-
-    public function show(Department $department): JsonResponse
-    {
-        return response()->json($department);
-    }
 }

@@ -5,7 +5,7 @@ namespace App\Enums;
 /** Who is accountable for an adaptation plan task. */
 enum ResponsibleRole: string
 {
-    case DEPARTMENT_HEAD = 'Руководитель отдела';
+    case DEPARTMENT_HEAD = 'Начальник отдела';
     case MENTOR = 'Наставник';
     case HR = 'Сотрудник УПиПК';
     case INTERN = 'Стажер';

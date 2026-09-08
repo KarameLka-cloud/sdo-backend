@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('role:view_users')->group(function () {
             Route::get('/', [UserController::class, 'index']);
             Route::get('mentors', [UserController::class, 'mentors']);
+            Route::get('supervisors', [UserController::class, 'supervisors']);
             Route::get('department-heads', [UserController::class, 'departmentHeads']);
         });
 
@@ -34,13 +35,14 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('revoke-role', [RoleController::class, 'revokeRole']);
         });
 
-        Route::apiResource('departments', DepartmentController::class)->only(['index', 'show']);
-        Route::apiResource('positions', PositionController::class)->only(['index', 'show']);
+        Route::apiResource('departments', DepartmentController::class)->only(['index']);
+        Route::apiResource('positions', PositionController::class)->only(['index']);
     });
 
     // Everyone reads the catalogue; only admins change it.
     Route::apiResource('learning-items', LearningItemController::class)
         ->parameters(['learning-items' => 'learningItem'])
+        ->except(['show'])
         ->middlewareFor(['store', 'update', 'destroy'], 'role:full_access');
 
     // LDAP lookups are expensive, so the directory gets its own rate limit.

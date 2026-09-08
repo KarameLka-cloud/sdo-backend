@@ -23,7 +23,7 @@ class AdaptationPlanPolicy
         return in_array($this->resolveRole($user), [
             UserRole::ADMIN,
             UserRole::MENTOR,
-            UserRole::DEPARTMENT_HEAD,
+            UserRole::SUPERVISOR,
         ], true);
     }
 
@@ -32,7 +32,7 @@ class AdaptationPlanPolicy
         return $plan->isManageableBy($user, $this->resolveRole($user));
     }
 
-    public function update(User $user, AdaptationPlan $plan): bool
+    public function updateMeta(User $user, AdaptationPlan $plan): bool
     {
         return $this->manage($user, $plan);
     }

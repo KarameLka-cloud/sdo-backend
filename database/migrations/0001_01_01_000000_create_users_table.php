@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('company')->nullable();
             $table->string('login')->unique();
             $table->string('password');
+            $table->string('guid')->nullable()->unique();
+            $table->string('domain')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

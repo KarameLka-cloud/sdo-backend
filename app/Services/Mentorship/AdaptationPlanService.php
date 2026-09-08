@@ -19,6 +19,7 @@ class AdaptationPlanService
     public const PLAN_LIST_RELATIONS = [
         'user.roles',
         'mentorUser.roles',
+        'supervisorUser.roles',
         'departmentHeadUser.roles',
         'template',
     ];
@@ -119,17 +120,28 @@ class AdaptationPlanService
     /**
      * Applies a manager edit to a day. `intern_comment` is intentionally not
      * writable here: only the intern may change it, via updateInternComment().
+     * Comment fields are applied only for the actor's role so a mentor cannot
+     * overwrite HR or department-head notes.
      */
-    public function updateDay(AdaptationPlanDay $day, array $validated): AdaptationPlanDay
+    public function updateDay(AdaptationPlanDay $day, array $validated, User $actor): AdaptationPlanDay
     {
-        $day->update([
+        $actor->loadMissing('roles');
+        $role = $this->roleResolver->resolve($actor->role);
+
+        $payload = [
             'date_from' => $validated['date_from'],
             'date_to' => $validated['date_to'] ?? null,
             'completion' => $validated['completion'],
-            'employee_comment' => $validated['employee_comment'] ?? null,
-            'mentor_comment' => $validated['mentor_comment'] ?? null,
-            'department_head_comment' => $validated['department_head_comment'] ?? null,
-        ]);
+        ];
+
+        if ($role === UserRole::ADMIN) {
+            $payload['employee_comment'] = $validated['employee_comment'] ?? null;
+            $payload['department_head_comment'] = $validated['department_head_comment'] ?? null;
+        } elseif ($role === UserRole::MENTOR) {
+            $payload['mentor_comment'] = $validated['mentor_comment'] ?? null;
+        }
+
+        $day->update($payload);
 
         return $day->fresh(['tasks']);
     }
@@ -198,7 +210,8 @@ class AdaptationPlanService
 
     public function assertShiftAllowed(AdaptationPlanTemplate $template, int $shift): void
     {
-        if (! in_array($shift, $template->shifts ?? [], true)) {
+        $allowedShifts = array_map('intval', $template->shifts ?? []);
+        if (! in_array((int) $shift, $allowedShifts, true)) {
             throw ValidationException::withMessages([
                 'shift' => ['Выбранная смена недоступна для указанного шаблона.'],
             ]);
@@ -219,13 +232,23 @@ class AdaptationPlanService
             ];
         }
 
+        $supervisorChanged = array_key_exists('supervisor', $payload)
+            && ((int) $payload['supervisor'] !== (int) $currentPlan?->supervisor);
+        if ($supervisorChanged) {
+            $checks[(int) $payload['supervisor']] = [
+                'field' => 'supervisor',
+                'role' => UserRole::SUPERVISOR,
+                'message' => 'Выбранный пользователь не является руководителем отделения.',
+            ];
+        }
+
         $departmentHeadChanged = array_key_exists('department_head', $payload)
             && ((int) $payload['department_head'] !== (int) $currentPlan?->department_head);
         if ($departmentHeadChanged) {
             $checks[(int) $payload['department_head']] = [
                 'field' => 'department_head',
                 'role' => UserRole::DEPARTMENT_HEAD,
-                'message' => 'Выбранный пользователь не является руководителем отдела.',
+                'message' => 'Выбранный пользователь не является начальником отдела.',
             ];
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models\User;
 
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -77,6 +78,8 @@ class User extends Authenticatable implements LdapAuthenticatable
     {
         $this->loadMissing('roles');
 
-        return $this->roles->first()?->display_name;
+        $role = $this->roles->first();
+
+        return UserRole::displayName($role?->name) ?? $role?->display_name;
     }
 }

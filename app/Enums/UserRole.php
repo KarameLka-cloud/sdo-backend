@@ -9,6 +9,7 @@ enum UserRole: string
 {
     case ADMIN = 'ADMIN';
     case MENTOR = 'MENTOR';
+    case SUPERVISOR = 'SUPERVISOR';
     case DEPARTMENT_HEAD = 'DEPARTMENT_HEAD';
 
     /** @return list<string> */
@@ -25,18 +26,17 @@ enum UserRole: string
         return match ($this) {
             self::ADMIN => 'Администратор',
             self::MENTOR => 'Наставник',
-            self::DEPARTMENT_HEAD => 'Руководитель отдела',
+            self::SUPERVISOR => 'Руководитель отделения',
+            self::DEPARTMENT_HEAD => 'Начальник отдела',
         };
     }
 
-    /**
-     * Получить все роли как массив
-     */
-    public static function toArray(): array
+    public static function displayName(?string $name): ?string
     {
-        return array_map(fn ($role) => [
-            'name' => $role->value,
-            'label' => $role->label(),
-        ], self::cases());
+        if (! $name) {
+            return null;
+        }
+
+        return self::tryFrom($name)?->label();
     }
 }

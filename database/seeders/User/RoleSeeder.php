@@ -22,13 +22,20 @@ class RoleSeeder extends Seeder
                 'display_name' => 'Наставник',
             ],
             [
+                'name' => 'SUPERVISOR',
+                'display_name' => 'Руководитель отделения',
+            ],
+            [
                 'name' => 'DEPARTMENT_HEAD',
-                'display_name' => 'Руководитель отдела',
+                'display_name' => 'Начальник отдела',
             ],
         ];
 
         foreach ($roles as $role) {
-            Role::create($role);
+            Role::updateOrCreate(
+                ['name' => $role['name']],
+                ['display_name' => $role['display_name']],
+            );
         }
     }
 }

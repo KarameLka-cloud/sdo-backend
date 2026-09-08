@@ -9,7 +9,7 @@ enum Permission: string
 {
     case FULL_ACCESS = 'full_access';
 
-    /** Просмотр списка сотрудников: нужен для назначения стажёра, наставника и руководителя. */
+    /** Просмотр списка сотрудников: нужен для назначения стажёра, наставника, руководителя отделения и начальника отдела. */
     case VIEW_USERS = 'view_users';
 
     /**
@@ -22,7 +22,7 @@ enum Permission: string
                 self::FULL_ACCESS,
                 self::VIEW_USERS,
             ],
-            UserRole::MENTOR, UserRole::DEPARTMENT_HEAD => [
+            UserRole::MENTOR, UserRole::SUPERVISOR, UserRole::DEPARTMENT_HEAD => [
                 self::VIEW_USERS,
             ],
         };

@@ -3,7 +3,6 @@
 namespace App\Services\Mentorship;
 
 use App\Enums\CompletionStatus;
-use App\Enums\ResponsibleRole;
 use App\Enums\TaskStatus;
 use App\Models\Mentorship\AdaptationPlan;
 use App\Models\Mentorship\AdaptationPlanDay;
@@ -59,20 +58,7 @@ class AdaptationPlanStructureGenerator
 
                 $day->tasks()->createMany($tasks);
             }
-
-            return;
         }
-
-        $day = AdaptationPlanDay::create([
-            'adaptation_plan_id' => $plan->id,
-            'work_day' => 1,
-            'day_from' => 1,
-            'day_to' => 1,
-            'date_from' => $plan->start_date->toDateString(),
-            'date_to' => null,
-            'completion' => CompletionStatus::IN_PROGRESS->value,
-        ]);
-        $day->tasks()->createMany($this->buildDefaultTasks($plan->shift, 3));
     }
 
     /** Drops generated days and tasks. Does not touch the intern user. */
@@ -111,28 +97,6 @@ class AdaptationPlanStructureGenerator
             ],
             $tasksForDay
         );
-    }
-
-    private function buildDefaultTasks(int $shift, int $tasksPerDay): array
-    {
-        $roles = [
-            ResponsibleRole::INTERN,
-            ResponsibleRole::MENTOR,
-            ResponsibleRole::HR,
-            ResponsibleRole::DEPARTMENT_HEAD,
-        ];
-
-        $tasks = [];
-        for ($index = 1; $index <= $tasksPerDay; $index++) {
-            $tasks[] = [
-                'description' => "Задача {$index} для смены {$shift}",
-                'status' => TaskStatus::NOT_DONE->value,
-                'responsible_role' => $roles[($index - 1) % count($roles)]->value,
-                'links' => [],
-            ];
-        }
-
-        return $tasks;
     }
 
     private function normalizeBlueprint(?array $blueprint): array

@@ -2,6 +2,7 @@
 
 namespace App\Models\Mentorship;
 
+use App\Enums\CompletionStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,11 +23,17 @@ class AdaptationPlanDay extends Model
         'department_head_comment',
     ];
 
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     protected $casts = [
         'date_from' => 'date:Y-m-d',
         'date_to' => 'date:Y-m-d',
         'day_from' => 'integer',
         'day_to' => 'integer',
+        'completion' => CompletionStatus::class,
     ];
 
     public function plan(): BelongsTo

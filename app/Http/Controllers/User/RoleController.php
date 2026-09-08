@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\User;
 
-use App\Http\Controllers\User\RoleController;
+use App\Enums\UserRole;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleRequest;
 use App\Models\User\Role;
 use App\Models\User\User;
@@ -13,13 +14,16 @@ class RoleController extends Controller
     /** All roles that can be assigned. */
     public function index(): JsonResponse
     {
+        $order = array_flip(UserRole::values());
+
         return response()->json(
             Role::query()
-                ->orderBy('name')
                 ->get(['name', 'display_name'])
+                ->sortBy(fn (Role $role) => $order[$role->name] ?? 99)
+                ->values()
                 ->map(fn (Role $role) => [
                     'name' => $role->name,
-                    'label' => $role->display_name,
+                    'label' => UserRole::displayName($role->name) ?? $role->display_name,
                 ])
         );
     }

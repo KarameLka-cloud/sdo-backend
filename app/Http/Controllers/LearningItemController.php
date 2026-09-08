@@ -39,11 +39,6 @@ class LearningItemController extends Controller
         return response()->json($item->load(self::RELATIONS), 201);
     }
 
-    public function show(LearningItem $learningItem): JsonResponse
-    {
-        return response()->json($learningItem->load(self::RELATIONS));
-    }
-
     public function update(LearningItemRequest $request, LearningItem $learningItem): JsonResponse
     {
         $learningItem->update($request->validated());
@@ -55,6 +50,6 @@ class LearningItemController extends Controller
     {
         $learningItem->delete();
 
-        return response()->json(['message' => 'Learning item deleted']);
+        return response()->json(['message' => 'Материал удалён']);
     }
 }

@@ -18,6 +18,7 @@ class AdaptationPlan extends Model
         'work_schedule',
         'shift',
         'mentor',
+        'supervisor',
         'department_head',
     ];
 
@@ -50,6 +51,11 @@ class AdaptationPlan extends Model
         return $this->belongsTo(User::class, 'mentor');
     }
 
+    public function supervisorUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'supervisor');
+    }
+
     public function departmentHeadUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'department_head');
@@ -57,8 +63,8 @@ class AdaptationPlan extends Model
 
     /**
      * Limits a listing to the plans the given user is allowed to see:
-     * admins see everything, mentors and department heads see the plans they
-     * are assigned to, and everyone else sees only their own plan.
+     * admins see everything, mentors/supervisors/heads see plans where they
+     * are assigned, and everyone else sees only their own plan.
      */
     public function scopeVisibleTo(Builder $query, User $user, ?UserRole $role): Builder
     {
@@ -66,10 +72,16 @@ class AdaptationPlan extends Model
             return $query;
         }
 
-        if (in_array($role, [UserRole::MENTOR, UserRole::DEPARTMENT_HEAD], true)) {
-            return $query->where(fn (Builder $scoped) => $scoped
-                ->where('mentor', $user->id)
-                ->orWhere('department_head', $user->id));
+        if ($role === UserRole::MENTOR) {
+            return $query->where('mentor', $user->id);
+        }
+
+        if ($role === UserRole::SUPERVISOR) {
+            return $query->where('supervisor', $user->id);
+        }
+
+        if ($role === UserRole::DEPARTMENT_HEAD) {
+            return $query->where('department_head', $user->id);
         }
 
         return $query->where('user_id', $user->id);
@@ -81,6 +93,10 @@ class AdaptationPlan extends Model
             return true;
         }
 
+        if ($role === UserRole::DEPARTMENT_HEAD) {
+            return (int) $this->department_head === (int) $user->id;
+        }
+
         return (int) $this->user_id === (int) $user->id;
     }
 
@@ -90,10 +106,15 @@ class AdaptationPlan extends Model
             return true;
         }
 
-        if ((int) $this->mentor === (int) $user->id) {
-            return true;
+        if ($role === UserRole::MENTOR) {
+            return (int) $this->mentor === (int) $user->id;
         }
 
-        return (int) $this->department_head === (int) $user->id;
+        if ($role === UserRole::SUPERVISOR) {
+            return $this->supervisor !== null
+                && (int) $this->supervisor === (int) $user->id;
+        }
+
+        return false;
     }
 }

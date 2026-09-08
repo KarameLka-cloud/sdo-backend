@@ -11,12 +11,18 @@ return new class extends Migration
         Schema::create('adaptation_plans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
+            $table->foreignId('adaptation_plan_template_id')
+                ->nullable()
+                ->constrained('adaptation_plan_templates')
+                ->nullOnDelete();
             $table->date('start_date');
             $table->string('work_schedule');
             $table->unsignedTinyInteger('shift');
-            // Removing the intern removes the plan, but removing a mentor or a
-            // head must not silently delete someone else's plan: reassign first.
+            // Removing the intern removes the plan, but removing a mentor,
+            // supervisor or head must not silently delete someone else's plan:
+            // reassign first.
             $table->foreignId('mentor')->constrained('users')->restrictOnDelete();
+            $table->foreignId('supervisor')->nullable()->constrained('users')->restrictOnDelete();
             $table->foreignId('department_head')->constrained('users')->restrictOnDelete();
             $table->timestamps();
         });

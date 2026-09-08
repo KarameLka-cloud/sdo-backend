@@ -27,6 +27,7 @@ class AdaptationPlanUpdateRequest extends FormRequest
             'adaptation_plan_template_id' => ['sometimes', 'integer', 'exists:adaptation_plan_templates,id'],
             'shift' => ['sometimes', 'integer', 'min:1'],
             'mentor' => ['sometimes', 'integer', 'exists:users,id'],
+            'supervisor' => ['sometimes', 'integer', 'exists:users,id'],
             'department_head' => ['sometimes', 'integer', 'exists:users,id'],
         ];
     }
