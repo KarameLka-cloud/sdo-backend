@@ -136,9 +136,10 @@ class AdaptationPlanService
 
         if ($role === UserRole::ADMIN) {
             $payload['employee_comment'] = $validated['employee_comment'] ?? null;
-            $payload['department_head_comment'] = $validated['department_head_comment'] ?? null;
         } elseif ($role === UserRole::MENTOR) {
             $payload['mentor_comment'] = $validated['mentor_comment'] ?? null;
+        } elseif ($role === UserRole::DEPARTMENT_HEAD) {
+            $payload['department_head_comment'] = $validated['department_head_comment'] ?? null;
         }
 
         $day->update($payload);

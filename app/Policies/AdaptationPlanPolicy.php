@@ -23,7 +23,7 @@ class AdaptationPlanPolicy
         return in_array($this->resolveRole($user), [
             UserRole::ADMIN,
             UserRole::MENTOR,
-            UserRole::SUPERVISOR,
+            UserRole::DEPARTMENT_HEAD,
         ], true);
     }
 

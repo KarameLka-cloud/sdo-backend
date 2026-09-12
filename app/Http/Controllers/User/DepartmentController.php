@@ -12,6 +12,11 @@ class DepartmentController extends Controller
 
     public function index(): JsonResponse
     {
-        return $this->listCatalog(Department::class);
+        return response()->json(
+            Department::query()
+                ->orderByRaw('CASE WHEN name = ? THEN 0 ELSE 1 END', ['Все отделения'])
+                ->orderBy('name')
+                ->get(),
+        );
     }
 }

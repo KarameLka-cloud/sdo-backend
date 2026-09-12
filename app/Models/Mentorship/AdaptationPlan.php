@@ -97,6 +97,11 @@ class AdaptationPlan extends Model
             return (int) $this->department_head === (int) $user->id;
         }
 
+        if ($role === UserRole::SUPERVISOR) {
+            return $this->supervisor !== null
+                && (int) $this->supervisor === (int) $user->id;
+        }
+
         return (int) $this->user_id === (int) $user->id;
     }
 
@@ -110,9 +115,8 @@ class AdaptationPlan extends Model
             return (int) $this->mentor === (int) $user->id;
         }
 
-        if ($role === UserRole::SUPERVISOR) {
-            return $this->supervisor !== null
-                && (int) $this->supervisor === (int) $user->id;
+        if ($role === UserRole::DEPARTMENT_HEAD) {
+            return (int) $this->department_head === (int) $user->id;
         }
 
         return false;
